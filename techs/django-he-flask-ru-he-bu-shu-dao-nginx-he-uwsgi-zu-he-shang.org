@@ -1,0 +1,184 @@
+#+TITLE: Django 和 Flask 如何部署到 Nginx+uWSGI 组合上
+#+DATE: <2014-03-30 Sat>
+#+KEYWORDS: django,flask,nginx,uwsgi
+
+#+BEGIN_COMMENT
+.. title: Django和Flask如何部署到Nginx+uWSGI组合上
+.. slug: django-he-flask-ru-he-bu-shu-dao-nginx-he-uwsgi-zu-he-shang
+.. date: 2014/03/30 20:28:23
+.. tags: django,flask,nginx,uwsgi
+.. link: 
+.. description: 
+.. type: text
+#+END_COMMENT
+
+
+Django 或 Flask 在本机利用各自自带的开发服务器写得差不多时，就该考虑将
+程序部署到服务器上了，官方文档都有相应的指导，不过一来好多 E 文，虽说慢
+慢看也能看出名堂，但发现自己 E 文还是没有达到随心所欲的境界，中文文档不
+管多么长一大段，总能刷一眼就将文章大概和关键词抓住，而 E 文却得细细看才
+能领悟内容，所以写这篇博客作为备忘，也希望能帮到有需要的同学，另外官方
+文档有些细节可能并没有涉及。
+** django
+   django 在开发时一般在 settings.py 中将 debug 选项打开，方便调试。其
+   模板和静态文件一般都放在相应 app 目录里面。例如在 *venv* 目录里用
+   =django-admin.py startproject mysite= 创建项目 *mysite* ，然后用
+   =django-admin.py startapp app1= 创建应用 *app1* ，则相应的模板和静态
+   文件目录为 *~/venv/mysite/app1/templates/app1/* 和
+   *~/venv/mysite/app1/static/app1/* ，这个看起来会比较怪，你会想
+   django 为什么这么 SB 的在每个应用下面还创建一个应用的子目录呢，因为
+   django会默认到每个应用的 templates 目录下查找模板，如果你的应用
+   app1 和app2 都有一个相同名字的模板，比如 *header.html* ，django 就没
+   法判断该用哪个模板渲染，所以比较好的方法是用模板命名空间(template
+   namespacing)，即在每个模板前加上应用名作为命名空间，如 ={% extends
+   'app1/header.html' %}= ，静态文件也是同样的道理。
+   
+   当采用其它服务器运行 django 应用时，django 就不再 serve 静态文件了，
+   即使开启了 debug，因为这时 django 会认为你有生产服务器了，不需要我
+   这个破开发服务器 server 静态文件了，所以你必须自己配置服务器
+   server 静态文件，但正如前面说的，django 的静态文件是分散在各个 app
+   里面的，该怎么才能更加方便的让 nginx,apache 等托管这些分散的静态文
+   件呢？在 nginx,apache 的配置文件里写正则表达式去匹配？No,no！这里
+   django manage.py 里提供了一个方便的命令行工具 collectstatic ，字面
+   意思就是收集静态文件，运行 =python manage.py collectstatic= 会将分
+   散的静态文件收集起来，不过运行这个命令前需要在 *settings.py* 中指定
+   收集到哪， =STATIC_ROOT = os.path.join(BASE_DIR, "static/")= 这样设
+   置后会将所有用到的静态文件都收集到 *static* 目录下，而且是按 app 分
+   子目录的，如 static/admin, static/app1, static/app2，其实说白了这条
+   命令就是执行了一系列的 cp 命令。然后就可以通过配置 nginx,apache 轻
+   松地托管静态文件了。很多新手在使用 django 时都有可能会碰到这个问题：
+   用 nginx 或 apache 部署 django 网站时 admin 页面的静态文件丢失了，
+   然后不同地方会告诉你不同的解决方案，虽说都能起作用，不过用
+   collectstatic 的方式是最容易也最符合 django 之道的，另外说一句，既
+   然用了 django 框架就尽量按 django 方式去处理问题，这样会变得很轻松。
+** Flask
+   相比 Django，[[http://flask.pocoo.org/][Flask]] 小项目坑就比较少了，因为一般都是直接将所有静态文
+   件扔到一个 static 目录下面，配置 Nginx 就方便多了，不过对于 Flask 大
+   项目来说，一般都是推荐用 [[http://flask.pocoo.org/docs/blueprints/][Blueprints]] 由于本人还没有用 Flask 做过大项
+   目，所以具体情况不太了解，后面只给出 Flask 小项目的（Nginx+uWSGI）的
+   配置
+** uWSGI
+   WSGI(python web server gateway interface) 是 python 界的 web 标准接
+   口，维基上的解释“WSGI是作为Web服务器与Web应用程序或应用框架之间的一
+   种低级别的接口，以提升可移植Web应用开发的共同点”，因为以前python 的
+   web 应用程序都是针对某种接口设计的，选择某种框架意味着必须使用某种特
+   定的服务器。有了 WSGI 标准（2003年）后，所有应用只要遵循这个接口协议
+   就可以使用任何服务器。所以现在很少看到有 python 用
+   cgi,fastcgi,mod_python 的，基本统一在 WSGI 标准下。[[http://uwsgi-docs.readthedocs.org/en/latest/][uWSGI]] 是 wsgi 的
+   一种高性能的实现，有很多文章对 uWSGI,fastcgi,gunicorn 等的测评都表明
+   uWSGI 的性能很强悍（完秒其余）。这个 uWSGI 就不仅仅是服务于python 程
+   序了，因为在 python 之后其它脚本语言也都有相应的 WSGI 版本。不同语言
+   使用 uWSGI 服务器，只需相应的插件就行。
+   
+   安装使用 uWSGI 也是相当容易的，直接用相应发行版的 package manager 安
+   装 uwsgi 就行，不过如果不是用 python 的包管理器安装的，则对于python
+   web 应用来说还需要安装 python 的相应插件 *uwsgi-plugin-python* 。很
+   多人跟着某些博客中的教程使用 uwsgi 时都会碰到 =uwsgi: unrecognized
+   option ...= ，如 =--module= , =--wsgi-file= , =--callable= 等，最开
+   始我也碰到这样的问题， =uwsgi --help= 得到一大堆帮助信息（吐槽下，
+   uWSGI 用户接口方面太不友好了，输出这么一大堆信息会吓着初学者，而且也
+   很难从中找到需要的帮助信息，要是你用管道加 less ，那我就无话可说了），
+   找了下发现的确没有这些选项，第一反应是版本对不上，后来发现相同版本也
+   会遇到这个问题，然后才找到问题的根源，需要在上面那些未识别选项前加上
+   =--plugin python= 来告诉 uWSGI 我在使用 python 插件，后面那些选项你
+   用python 插件去解析。
+   
+   老用那一长串命令选项当然很不爽，uWSGI 允许你用多种文件格式
+   （xml,ini,json,yaml）将上述命令行选项保存起来，然后用相应的选项
+   (-x,-i,-j,-y)告诉 uWSGI 你的配置文件格式。一个典型的 xml 格式的配置
+   文件如下：
+    #+BEGIN_SRC xml
+      <uwsgi>
+        <plugin>python</plugin>
+        <socket>127.0.0.1:8000</socket>
+        <chdir>/home/yufeng/venv/mysite</chdir>
+        <home>/home/yufeng/venv</home>
+        <module>django_wsgi</module>
+        <processes>4</processes>
+        <daemonize>uwsgi.log</daemonize>
+      </uwsgi>
+    #+END_SRC
+   其中 module 是 *django_wsgi.py* 文件，该文件与 *manage.py* 在同一目录，
+   文件内容如下：
+    #+BEGIN_SRC python
+      #!/usr/bin/python
+      import os
+
+      os.environ.setdefault("DJANGO_SETTINGS_MODULE", "mysite.settings")
+
+      from django.core.handlers.wsgi import WSGIHandler
+      application = WSGIHandler()
+    #+END_SRC
+
+   Flask 的 uWSGI 配置文件（ini 版）如下：
+   #+BEGIN_SRC conf
+     [uwsgi]
+     plugins=python
+     vhost=true
+     socket=127.0.0.1:9001
+   #+END_SRC
+** nginx
+   据说这货比 Apache 性能更强悍，这个对于我这种低端用户来说意义不大，
+   而且也不能跟风评论。不过轻量级这个还是可以直观的看出端倪的，两者最
+   新稳定版本源码文件： /nginx-1.4.7.tar.gz/ 是751k，而
+   /httpd-2.2.26.tar.gz/ 是6.9MB，几乎有10倍的差距，虽说最终编译运行的
+   程序差别不一定是这么大，但 nginx 轻量级还是无疑的。
+   
+   废话少说，直接看如何配置 nginx 吧。主配置文件是
+   */etc/nginx/ngnix.conf* ，deb 系发行版在配置目录下建了两个目录
+   *sites-available* 和 *sites-enabled* ，这样的确会方便很多。
+   *nginx.conf* 中配置详细解释可以戳 [[http://tengine.taobao.org/book/chapter_02.html#id6][这里]] ，讲解的非常详细，这里就不再
+   啰嗦了。为了保证不出现 403 Forbidden ，一般有两种方案：把项目的
+   owner 改为 www-data(deb系下) =chown www-data:www-data
+   mysite/static= ；将 nginx.conf 中的 user 改为你当前用户。下面贴上根
+   据上面 Django 和 Flask 的 uWSGI 配置相应的 nginx 配置，都是假设项目
+   在 [[http://www.raspberrypi.org][RaspberryPi]] 上。
+
+   Django:
+   #+BEGIN_SRC conf
+     user pi;
+     work_processes 2;
+     http {
+          upstream django {
+                   server 127.0.0.1:8001;
+                   }
+          server {
+                 listen 8000;
+                 server_name localhost;
+                 location /static/ {
+                          alias /home/pi/venv/mysite/static/;
+                          }
+                 location /media/ {
+                          alias /home/pi/venv/mysite/media/;
+                          }
+                 location / {
+                          uwsgi_pass django;
+                          include uwsgi_params;
+                          }               
+          }
+     }
+
+   #+END_SRC
+
+   Flask:
+   #+BEGIN_SRC conf
+     user pi;
+     work_processes 2;
+     server {
+             listen 5000;
+             server_name hostname;
+         
+             location /static {
+                     alias /home/pi/venv/mysite/static;
+             }
+         
+             location / {
+                     include uwsgi_params;
+                     uwsgi_pass 127.0.0.1:9001;
+                     uwsgi_param UWSGI_PYHOME /home/pi/venv;
+                     uwsgi_param UWSGI_CHDIR /home/pi/venv/mysite;
+                     uwsgi_param UWSGI_MODULE mysite;
+                     uwsgi_param UWSGI_CALLABLE app;
+             }         
+     }
+   #+END_SRC

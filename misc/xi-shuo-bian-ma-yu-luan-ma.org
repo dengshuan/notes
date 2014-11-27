@@ -1,0 +1,258 @@
+#+TITLE: 细说编码与乱码
+#+DATE: <2014-05-23>
+
+
+#+BEGIN_COMMENT
+.. title: 细说编码与乱码
+.. slug: xi-shuo-bian-ma-yu-luan-ma
+.. date: 2014/05/23 23:18:42
+.. tags: 
+.. link: 
+.. description: 
+.. type: text
+#+END_COMMENT
+
+写过 python2 程序和在多平台(Windows, Linux, Mac)工作的人应该被编码和乱
+码问题纠结过，尤其是从 Windows 转到 Linux 的新手，肯定会被折腾得蛋疼不
+已。对于被各种编码与乱码问题折腾过的人，有必要好好研究一下这些东西，在
+这里把这些总结记录下来
+
+* 编码格式
+  对计算机稍有点了解的人都知道信息是以二进制存储在计算机中的，但是0和1
+  是如何表示信息的呢？同样一串0和1可能表示的是不同的信息，计算机是通过
+  不同编码来识别这些信息，准确说不是识别，只是按某种方式处理这些0和1。
+  最初对于文本信息有不同的处理方式，1968年 American Standard Code for
+  Information Interchange 就是所谓的 ASCII 标准成立，学过编程语言的人
+  应该都知道这种编码方式，这种方式只使用了0 ~ 127来表示字符，例如小写
+  字母 a 用97表示（即 1100001），当然这对于只讲英文的人足够了，不就那
+  么点字符吗，还有哪个单词不能表示的？也许他们设计之初就根本没想到世界
+  上还有那么多国家、那么多种文字。
+
+  然后那些英语方言就无法用 ASCII 表示了，当然还有其它许多非英语国家的
+  语言根本就不是用英文或其变体表示的，就更没法用 ASCII 编码了，最典型
+  的就是我们古老的中华民族的优美的汉字，在 ASCII 中根本就没法表示。于
+  是各国又制定了本国语言相应的编码格式，对 ASCII 进行了扩充，由于计算
+  机的母语是英语，所以其它各种编码格式对 ASCII 都是兼容的，也就是说
+  0 ~ 127仍然都还是表示那些英文字符，因而不管是哪种编码，英文始终表示那
+  些英文，也就不会出现乱码，乱码的只是用0 ~ 127以外的数字表示的信息。
+
+  我们中文的常见编码为 gb2312, gbk, gb18030, big5，其中 gb2312, gbk,
+  gb18030 标准是按时间先后发布的，每一代标准包含更多的字符，big5 则是
+  台湾地区繁体字编码标准。也就是说如果 gb2312 中能表示的字符，则在 gbk
+  和 gb18030 中表示是一样的。
+
+  各个国家针对本国语言制定的编码标准并不通用，所以势必应该有一种能容纳
+  所有语言的编码方式，这也就是所谓的万国码 /unicode/ ，不过这不能算是
+  一种编码方式，而只能算是一种规范。相应的在计算机中的实现才是编码方式，
+  /unicode/ 在计算机中的实现有 UTF-8, UTF-16 和 UTF-32 三种，最常用的
+  就是 UTF-8 了，这种编码方式所占用的空间最省。由于世界上每种语言的每
+  个文字都对应 unicode 中的唯一的二进制编码，所以信息交流起来变得更加
+  容易。
+
+  关于编码我觉得 python 标准库中的 codecs 库的 *Encodings and Unicode*
+  讲得比较好，因此翻译了[[../trans/python-codecs.org][这部分]] ，想详细了解的可以参考一下。
+
+
+* 不同平台编码方式
+  Windows 中文默认编码格式是 GBK，Linux 和 MacOS 默认编码格式是 UTF-8。
+  所以如果采用默认格式保存文本的话，换到其它系统用默认编辑器打开一般会
+  出现乱码。这是国内 Linux 新手常遇见的问题，会打击不少人的积极性，一
+  般有两种解决方案（加上直接放弃使用 Linux 就是三种了）：转码和使用高
+  级编辑器并对其进行设定，后面解决方案中会提到。对于程序员来说，推荐将
+  文件保存为 UTF-8 格式，因为从上面编码介绍中也可以看出 unicode 的优点。
+
+  另外一个也同样使跨平台用户头疼的问题是换行符，即使乱码问题解决了，仍
+  然会发现格式在多种平台显示不一致，因为 Windows 是用 =\r\n= 作为换行
+  符的，Linux 则是用标准 C 语言的 =\n= 表示换行的， MacOS 则是 =\r=
+
+  关于回车（Carriage Return）与换行（Line Feed）， [[http://en.wikipedia.org/wiki/Carriage_return][维基]] 有详细介绍，简
+  单说来就是最早的打字机换行需要进行两个操作：打印头回到行首（CR）和打
+  印头下移一行（LF），Windows 设计就仿照这种做法，而一些科学家（当然就
+  是 unix 科学家了）认为换行用两个字符表示太浪费，就只选择了一个，因而
+  这里不能说 Windows 设计不合理。
+
+  所以 Linux 和 MacOS 下的文本文件到了 Windows 下，整个文件变成了一行。
+  而 Windows 下保存的文本文件到 Linux 或 MacOS 下则会多出一个 =^M=
+  （这里对 Windows 文件到 Mac 中显示持保留意见，大多数博客中都是这样写
+  的，但从上面分析中可以推测出应该是多出 =$= 才是，由于没有 MacOS ，这
+  个没法验证，另外 Linux 和 MacOS 之间的文件共享大多数博客都没有提及，
+  这里最多也只能根据上面进行推断，所以还是不妄下结论了）。在 Linux 下
+  通过 =cat -A filename= 可以显示所有字符，包括控制字符，对于 Windows
+  下保存的文件，行尾显示 =^M$= (这难道是 Linux 用户称 Windows 为 M$ 的
+  原因)，对于Linux 下保存的文件显示 =$= ，对于 MacOS 下保存的文件则显
+  示 =^M= 。
+
+  python 程序可以指定以 universal newlines 读取文件 =f =
+  open("myfile.txt", "rU")= ，这样就可以智能的处理不同平台的换行符了。
+
+  因而如果是要在不同平台共享文件的话，除了需要转成该平台默认的编码外，
+  还需要处理换行符的问题。当然也可以不用转，但这样的话用系统默认的文本
+  编辑器打开就会出现乱码和格式混乱的现象。网上有很多转换小工具，如
+  [[http://sourceforge.net/projects/dos2unix/][dos2unix]] 。当然在了解了这些编码和换行符这些背景之后，其实可以很容易的
+  写一个小程序实现这样的转换，下面会提到这个方法。
+
+
+* Python 语言中的编码
+** python 程序中的编码
+    python2.x 中有一个专门的 =unicode= 类表示 unicode 字符，可以通过内
+    置函数 =unicode= 将普通字符串转换成 unicode 字符串，该函数还接受一
+    个 encoding 参数，可以指明原字符串的编码格式，也可以通过在字符串前
+    加 =u= 表示 unicode 字符串。
+
+    python2.x 程序中如果含有非 ASCII 字符则必须通过在文件前两行的注释
+    行 =coding=name= 指定编码格式，py2.4 中没指明的话会给出 Warning，
+    py2.5 至 py2.7 则会给出 Error
+  
+    涉及到的库、函数有 codecs, unicode, repr, format
+  
+    Python3.x 默认编码格式为 UTF-8 ，而且 =str= 类就支持 unicode 字符，
+    如果愿意的话可以直接用 unicode 字符作为变量名，因此 python3是一门
+    现代语言，对以非英语为母语的程序员来说更加友好，所以建议中文新手程
+    序员直接学习 python3 。对于 python2.x 可以通过前3行 =from
+    __future__ import unicode_literals= 申明引入 python3 默认unicode
+    的特性，这样就不用对每个非 ASCII 字符串前加上 =u= 前缀了。
+
+** python 终端中的编码
+    同 python 的源程序一样，python2.x 的终端默认编码格式为 ASCII，而
+    python3.x 则已经默认为 UTF-8 ，从下面这段示例可以看出
+    #+BEGIN_SRC python
+      import sys
+      # in python2.x
+      print sys.getdefaultencoding()  # => ascii
+      '中文'                          # => '\xe4\xb8\xad\xe6\x96\x87'
+      '中文'.encode('gbk')
+      '中文'.encode('utf-8')          # => UnicodeDecodeError: 'ascii' codec can't decode byte...
+
+      # in python3.x
+      print(sys.getdefaultencoding()) # => utf-8
+      '中文'                          # => '中文'
+      '中文'.encode('gbk')            # => b'\xd6\xd0\xce\xc4'
+      '中文'.encode('gbk')            # => b'\xe4\xb8\xad\xe6\x96\x87'
+      中文 = 'Chinese'
+      print(中文)                     # => Chinese
+    #+END_SRC
+
+    那么如何设置 python2.x 终端默认编码格式为 utf-8 呢？如下，一定要
+    =reload sys= 模块，否则 =sys= 是没有 =setdefaultencoding= 属性的
+    #+BEGIN_SRC python
+      import sys
+      reload(sys)
+      sys.setdefaultencoding('utf-8')
+    #+END_SRC
+
+
+* 常见编辑器编码设定
+** Vim
+  在 /.vimrc/ 中添加下面一行，读取 Windows 下的文件基本就不会显示乱码了
+  #+BEGIN_EXAMPLE
+    set fileencodings=utf-8,gb2312,gbk,gb18030
+  #+END_EXAMPLE
+
+** Emacs
+  通过 =M-x revert-buffer-with-coding-system= 或快捷键 =C-x RET r= 选
+  择源文件的编码，不知道怎么让 Emacs 像 Vim 中一样按一定顺序自动探测出
+  编码格式并以相应的编码显示
+
+
+* 几种常见的乱码解决方案
+  经常碰到的乱码会有下面几种：文本文件、压缩文件、音乐 tag、终端、虚拟
+  控制台、浏览器。下面是一些解决方案
+
+** 文本文件乱码
+  在不转码的情况下查看 Windows 下 GBK 格式的文件，请参考上面编辑器设定。
+  
+  转码的话，Linux 下可以借助 iconv 这个小工具进行编码转换 =iconv -f
+  gbk -t utf-8 old.txt > new.txt= ，将 utf-8 格式的转成 gbk 格式只需将
+  该命令中的 =gbk= 和 =utf-8= 互换。不过这个工具只能对编码进行转换，对
+  于上面提到的不同平台的换行符，却没做任何处理（需要 [[http://sourceforge.net/projects/dos2unix][dos2unix]] 进一步处
+  理）。对此我写了段 python [[https://gist.github.com/dengshuan/d1d983bdddfb0c20392d][小程序]] 可以方便地转换不同平台的文本文件，
+  通过 =python transform.py -2utf8 winfile.txt linuxfile.txt= 命令可以
+  将 windows 平台的文本文件转换成 linux 下的 utf-8 编码的文件，同时对
+  换行符也作了相应的转换，反过来只需将参数 =-2utf8= 改成 =-2gbk= 。
+
+** 压缩文件文件名乱码
+  同文本文件一样，不同平台文件名编码也不一样，所以文件名也会出现乱码，
+  这个在压缩文件中比较常见。这个没有找到现成的工具做相应的转换，只在网
+  上找到了一个小程序，原作者已不可考证，在此只能对其表示感谢。我对这段
+  程序作了修改和完善，让其能在不同平台互相转换。
+
+** 音乐 tag 乱码
+  如果播放器支持设定音乐文件 tag 编码，则只需要设定播放器 tag 编码为
+  gbk 或 utf-8 即可。如果不能设定而又想显示正常文字，则需要进行转码，
+  iconv 有一个相应的 mid3iconv 可以对音乐文件的 tag 编码进行转换，使用
+  方法如下：进入音乐文件夹，执行 =mid3iconv -e gbk *.mp3 *.wma= 命令即
+  可将 mp3 和 wma 文件的 gbk 编码的 tag 转成 utf-8 。当然如果你想通过
+  自己写程序实现转换的话，推荐使用 [[http://code.google.com/p/mutagen/][python-mutagen]] 库
+
+** 终端乱码
+  终端乱码一般是没有安装中文字体造成的，另外有些比较古老的终端是不支持
+  unicode 的，直接换成支持 unicode 的终端就不会出现乱码了。 xterm 本身
+  是支持 unicode 的，但很多时候会发现中文没法显示，通过按住 Ctrl 键再点
+  鼠标右键把字体调成 Large 就可以了，也可以在 /.Xdefaults/ 中设置 xterm
+  字体等使其正常显示中文。
+
+** 虚拟控制台乱码
+  要让虚拟控制台显示中文需要内核支持，然后籍由 fbterm 实现中文，相应地
+  要在虚拟控制台输入中文，则需要安装 fcitx-frontend-fbterm
+
+** 浏览器中的乱码
+  一般在网络传输中都使用 UTF-8 编码，浏览器会根据页面中的设置对其进行
+  解码，如果页面没有设定的话浏览器一般会根据浏览器设定中的默认编码格式
+  进行解码，如果这两种方式都失效的话，就有可能出现乱码问题，这种事情很
+  少发生。比较常见的是下载文件，如果服务器是 Windows 并且没有做特别的
+  设定的话，其中文文件文件名是 GBK 编码，Linux 下页面显示正常，但下载
+  文件则文件名是乱码的，之前 T 大网络学堂碰到过这种情况，不知现在解决
+  了没有。当时没有找到比较好的解决方案，只能在浏览器菜单中选择中文的
+  GBK encoding ，这样页面却又变成了乱码，下载时识别出中文文件名刷新一
+  下页面就又可以正常显示了
+
+
+* 软件的 i18n 和 l10n
+  i18n 和 l10n 分别代表 internationalization(首末字母 i 和 n 之间有18
+  个字母) 和 localization(首末字母 l 和 n 之间有10个字母) 的缩写，即国
+  际化和本土化，很多软件中都可以看到这两个词，如 libreoffice。l10n对我
+  们来说就是通常所说的汉化，一个
+
+  最重要的一条是： Software should only work with Unicode strings
+  internally, converting to a particular encoding on output.
+
+** Linux 系统中的 locale
+   locale-gen 命令生成 locale
+   各 locale 环境变量的含义
+
+* LaTeX 中文解决方案
+  如上所述，unicode 标准产生于 1980s，而早在这之前 19xx TeX 就已经诞生
+  了，因此 TeX 是没有考虑到 unicode 的，所以对于非英语系用户来说用 TeX
+  写作是一件比较麻烦的事情，因为必须编译相应的字体才能让 TeX 正确显示
+  非 ASCII 字符。后来有了 XeTeX 项目，直接使用 unicode 编码，渲染文档
+  时只需要系统有相应的字体即可，所以有了 xetex 和 xelatex 之后中文解决
+  就比较容易了。
+
+  中文使用 xelatex 需要宏包 xeCJK
+  #+BEGIN_SRC tex
+    \documentclass{article}
+    \usepackage{xeCJK}
+    %% 设置文档的中文主字体，Linux 下可以通过 fc-list :lang=zh 
+    %% 查看系统已有的中文字体
+    \setCJKmainfont{WenQuanYi Zen Hei}
+    \begin{document}
+    \title{中文文档}
+    \author{作者}
+    \maketitle
+    文档内容
+    \end{document}
+  #+END_SRC
+
+  上面的方法还需要自己单独按中文习惯处理章节等，不过现在 ctex 宏包已经
+  集成 xeCJK，因此可以直接简单的使用 ctex 宏包中相关的命令
+  #+BEGIN_SRC tex
+    \documentclass[nofonts]{article}
+    \usepackage{ctex}  % 可以直接使用 ctexcap 等
+    \setCJKmainfont{WenQuanYi Zen Hei}
+    \begin{document}
+    \title{中文文档}
+    \author{作者}
+    \maketitle
+    文档内容
+    \end{document}
+  #+END_SRC

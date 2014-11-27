@@ -1,0 +1,44 @@
+#+TITLE: 为 Nikola 增加 orgmode 支持
+#+DATE: <2014-02-02 Sat>
+
+#+BEGIN_COMMENT
+.. description: 
+.. tags: emacs,nikola,python
+.. title: 为 Nikola 增加 orgmode 支持
+.. link: 
+.. date: 2014/02/02 05:33:00
+.. type: text
+.. slug: wei-nikola-zeng-jia-orgmode-zhi-chi
+#+END_COMMENT
+
+
+* 为什么是 orgmode
+  [[http://orgmode.org/][orgmode]] 是 Emacs 的一种文档编辑模式，但远不止如此，orgmode 本身是一种
+  轻量级标记语言，与 [[http://zh.wikipedia.org/zh-cn/Markdown][Markdown]] , [[http://zh.wikipedia.org/wiki/ReStructuredText][reStructuredText]] , [[http://en.wikipedia.org/wiki/Textile_%2528markup_language%2529][Textile]] 等相似，非常
+  适合写文档博客，这一点上与这些轻量级标记语言类似，但 orgmode 还是一种
+  强大的 [[http://zh.wikipedia.org/wiki/GTD][GTD]] 工具，官网的口号是 /Your Life in Plain Text/ ，借助 Emacs
+  这个强大的编辑器，orgmode 堪称最强大的轻量级标记语言，同时也能非常方
+  便地输出成各种格式的文档，写各类技术文章极其方便，是 Emacs 党写文档的
+  不二选择。网上文档非常多，不愿在这里多费唇舌，以后兴许会写个学习笔记。
+  不过到目前为止一直没有用过orgmode 的 GTD，主要因为个人不太习惯做时间
+  管理。
+
+* 为 Nikola 增加 orgmode 支持
+  Nikola 前面的博文已经简单介绍过了，很好很强大，内置多种标记语言支持，
+  但没有包括 orgmode，不过这个不是问题，已经有 Geek 为我们备好了
+  orgmode 插件，简单的 =nikola install_plugin orgmode= 就装上了这个插件，
+  不过需要在项目的目录里执行这条命令，而且貌似天朝把 nikola 的插件、主
+  题都拦在了墙外，这也难不倒我们，毕竟爬梯是程序猿们的必备技能。然后修
+  改配置文件 conf.py
+  #+BEGIN_SRC python
+    # 在 posts 和 stories 中添加
+    ("posts/*.org", "posts", "post.tmpl"),
+    ("stories/*.org", "stories", "stories.tmpl"),
+    # 在 COMPILERS 中添加
+    {"orgmode": ('.org',),}
+  #+END_SRC
+  然后就可以用来写英文博客了，英文，Nani？是的，中文会报错，我是说中文
+  标题会有问题: *UnicodeEncodeError* ，查看了源码，问题出在
+  =fd.write('..{0}: {1}\n'.format(k,v))= 这一行，将其改为
+  =fd.write(u'..{0}: {1}\n'.format(k,v))= 就可以支持中文了。然后，然后
+  该干嘛干嘛-:)

@@ -1,0 +1,88 @@
+#+TITLE: 用 git 作为 nikola 博客发布工具
+#+DATE: <2014-02-09 Sat>
+#+BEGIN_COMMENT
+.. title: 用 git 作为 nikola 博客发布工具
+.. slug: yong-git-zuo-wei-nikola-bo-ke-fa-bu-gong-ju
+.. date: 2014/02/09 23:23:43
+.. tags: git,nikola
+.. link: 
+.. description: 
+.. type: text
+#+END_COMMENT
+
+
+前面已经介绍过用 Nikola 和 Emacs 的 org-mode 写博客，这篇文章讲讲如何部
+署发布博客。其实 Nikola 文档中 [[http://getnikola.com/handbook.html#deployment][Deployment]] 已经讲过，还给了一个链接
+[[http://toroid.org/ams/git-website-howto][git-website-howto]] 一步步介绍怎么通过 git 部署发布一个网站。本文的目的是
+给自己写一个备忘，同时也方便一些国内 nikola 或类似静态博客使用者作参考。
+
+之前准备在 Digitalocean 的 VPS 上直接写博客的，然后将 Nikola 生成的静态
+文件（output）直接软链接到 Nginx 的 root 目录去，试过这种方案结果老提示
+403 错误，也尝试过直接将 root 设为 output 目录，老是报 403 错误，改过
+output 目录权限还是 403 错误，就没再折腾了，应该是我对 Nginx 的机制没搞
+清楚造成的，有时间要好好学习一下 Nginx 的配置。而且直接在 VPS 上编辑文
+档不太方便，所以就放弃了这种方案，所以就有了我现在的博客。
+
+* 本地库(local repository)
+  本地的库位于 output 目录，通过 =nikola init myblogs= 生成的项目目录最
+  开始是不包含 output 目录的，所以在初始化项目后需要在项目目录
+  *myblogs* 中新建一个 output 目录，然后在这个目录中执行 git 初始化操作。
+  下面是这段的相关命令操作
+  #+BEGIN_EXAMPLE
+    nikola init myblogs
+    mkdir myblogs/output && cd myblogs/output
+    git init
+  #+END_EXAMPLE
+  然后开始写博客 =nikola new_post= ，生成博客 =nikola build= ，
+  *output* 目录里就有了新博客，把新增博客添加到 git 版本控制之中，然后
+  提交，当然这是提交到本地，我们还没有设置远程服务器。下面是这段的相关
+  命令流程
+  #+BEGIN_EXAMPLE
+    nikola new_po   # edit your blogs
+    nikola build
+    nikola serve    # preview blog locally
+    git add *       # in output directory
+    git commit -a -m "My first post"
+  #+END_EXAMPLE
+  
+* 远程库(remote repository)
+  远程库的名字随便取，与本地库没有关系。应该用 git 初始化为一个裸(bare)库。
+  #+BEGIN_EXAMPLE
+    ssh remote_username@remote_host
+    mkdir website.git && cd website.git
+    git init --bare
+  #+END_EXAMPLE
+  然后写一个钩子脚本(hook script)，该脚本在同步成功后执行，用于把 push
+  上来的文件检出到网页服务器的 DocumentRoot ，即 Nginx 的 root 目录。
+  #+BEGIN_EXAMPLE
+    mkdir -p /srv/http/blogs
+    vim ~/website.git/hooks/post-receive
+    chmod +x ~/website.git/hooks/post-receive
+    
+    # add following script to post-receive file
+    #!/bin/sh
+    git_work_tree=/srv/http/blogs git checkout -f
+  #+END_EXAMPLE
+  
+* 连接本地库和远程库
+  首先在本机生成 ssh 的公钥，然后将公钥上传到远程服务器，添加该公钥为受
+  信任，这样本机通过 ssh 连接远程服务器就不需要再输入密码了。然后将远程
+  库添加到本地，最后就可以 push 同步博客到 VPS 了，而且会自动在服务器端
+  部署好，这样一条 push 命令就发布了你的博客。
+  #+BEGIN_SRC sh
+    ssh-keygen -t rsa
+    scp .ssh/id_rsa.pub remote_username@remote_host:
+    ssh remote_username@remote_host
+    mkdir -p ~/.ssh
+    mv ~/id_rsa.pub ~/.ssh/authorized_keys
+    chmod 600 ~/.ssh/authorized_keys
+    exit
+    cd myblogs/output
+    git remote add blog ssh://remote_username@remote_host/home/remote_username/website.git
+    git push blog +master:refs/heads/master
+  #+END_SRC
+  以后发布新博客只需要 =git push blog= 就可以了。前面几篇博客到本篇博客
+  介绍了用 Nikola 和 orgmode 写静态博客，并用 git 工具发布博客的整个流
+  程，可以看出整个过程比较简单，而且写起 orgmode 文件也很愉快，So
+  happy hacking and blogging!（以后有空会再把这个过程进一步简化，使得在
+  Emacs 里实现一键发布）

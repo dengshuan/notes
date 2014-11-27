@@ -1,0 +1,65 @@
+#+TITLE: 测试
+#+DATE: <2014-02-02 Sat>
+
+#+BEGIN_COMMENT
+.. description: 
+.. tags: emacs,nikola,mathjax
+.. title: 测试
+.. link: 
+.. date: 2014/02/02 18:18:31
+.. type: text
+.. slug: ce-shi
+#+END_COMMENT
+
+
+* 字体标记
+  =mono= *bold* /italic/ ~verbatim~ _underlined_
+* 公式和代码
+   + 公式
+     
+     orgmode 支持 Latex 的公式书写，\( E=mc^2 \)，可以直接使用 latex 公
+     式环境
+      \begin{equation}
+      x = \sqrt{b}
+      \end{equation}
+   + 希腊字母
+     
+     可直接使用而且不需要使用 Latex 环境，直接在希腊字母前加反斜杠，如
+     \alpha \beta
+   
+   + 上标和下标
+     
+     与 Latex 里一样，如 10m^3, CO_2
+   + 插入代码
+     支持语法高亮需要 Emacs 的 htmlize 插件，一直有问题啊！
+     #+BEGIN_EXAMPLE
+       # 安装 Nikola 和 Orgmode 插件
+       pip install nikola --user
+       nikola init myblogs
+       cd myblogs
+       nikola install_plugin orgmode
+     #+END_EXAMPLE
+     支持各种程序设计语言，下面是 Python 的 /Hello-world/ 程序
+     #+BEGIN_SRC python
+       #!/usr/bin/env python
+       print "Hello,world!"
+     #+END_SRC
+     C 语言的 /Hello-world/ 程序
+     #+BEGIN_SRC c -n
+       #include <stdio.h>
+       
+       int main(int argc, char *argv[]) {
+	 printf ("Hello,world!\n");
+	 return 0;
+       }
+     #+END_SRC
+* 链接，表格
+  点[[http://self-definition.com][这里]]访问我的主页
+
+  插入表格也是极其方便的
+
+| Name  | Phone | Age | Country | gender |
+|-------+-------+-----+---------+--------|
+| Peter | 1234  | 15  | America | male   |
+| Anna  | 3142  | 22  | France  | female |
+
