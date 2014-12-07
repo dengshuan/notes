@@ -1,16 +1,17 @@
 #+TITLE: List of My Notes
 
+   + proj
+     + 2014-03-04 [[file:proj/cmcc-edu-jian-yi-ke-hu-duan.org][CMCC-EDU 简易客户端]]
+   + life
+     + 2014-10-26 [[file:life/beijing-marathon-2014.org][2014年北京马拉松]]
+     + 2014-03-02 [[file:life/avos-hackathon-huo-dong.org][AVOS Cloud Hackathon 活动]]
    + techs
+     + 2014-11-15 [[file:techs/ssh-tips.org][关于 ssh 的一些 Tips]]
      + 2014-03-30 [[file:techs/django-he-flask-ru-he-bu-shu-dao-nginx-he-uwsgi-zu-he-shang.org][Django 和 Flask 如何部署到 Nginx+uWSGI 组合上]]
      + 2014-02-09 [[file:techs/yong-git-zuo-wei-nikola-bo-ke-fa-bu-gong-ju.org][用 git 作为 nikola 博客发布工具]]
      + 2014-02-02 [[file:techs/wei-nikola-zeng-jia-orgmode-zhi-chi.org][为 Nikola 增加 orgmode 支持]]
-   + proj
-     + 2014-03-04 [[file:proj/cmcc-edu-jian-yi-ke-hu-duan.org][CMCC-EDU 简易客户端]]
    + misc
      + 2014-10-23 [[file:misc/emacs-24.4-release.org][Emacs 24.4 发布了]]
      + 2014-05-23 [[file:misc/xi-shuo-bian-ma-yu-luan-ma.org][细说编码与乱码]]
      + 2014-02-02 [[file:misc/ce-shi.org][测试]]
-   + life
-     + 2014-10-26 [[file:life/beijing-marathon-2014.org][2014年北京马拉松]]
-     + 2014-03-02 [[file:life/avos-hackathon-huo-dong.org][AVOS Cloud Hackathon 活动]]
    + 2014-02-01 [[file:about.org][About Me]]
