@@ -1,0 +1,142 @@
+#+TITLE: Python 中的 exit
+#+DATE: <2014-12-31>
+#+KEYWORDS: exit
+
+python 中有 [[https://docs.python.org/3/library/constants.html#exit][exit()]], [[https://docs.python.org/3/library/constants.html#quit][quit()]], [[https://docs.python.org/3/library/sys.html#sys.exit][sys.exit()]], [[https://docs.python.org/3/library/os.html#os._exit][os._exit()]] 几个退出函数，还有
+[[https://docs.python.org/3/library/atexit.html][atexit]] 模块
+
+* exit, quit
+exit() 是用于交互式中，与 quit() 作用相同，定义在 site.py 中，属于内置
+常量，不应该用到程序中。仅仅引起异常，只会在主线程调用时退出，引起的异
+常不能被拦截。
+#+BEGIN_SRC python
+  def setquit():
+      """Define new builtins 'quit' and 'exit'.
+
+      These are objects which make the interpreter exit when called.
+      The repr of each object contains a hint at how it works.
+
+      """
+      if os.sep == ':':
+          eof = 'Cmd-Q'
+      elif os.sep == '\\':
+          eof = 'Ctrl-Z plus Return'
+      else:
+          eof = 'Ctrl-D (i.e. EOF)'
+
+      builtins.quit = _sitebuiltins.Quitter('quit', eof)
+      builtins.exit = _sitebuiltins.Quitter('exit', eof)
+#+END_SRC
+
+* sys.exit
+sys.exit([arg]) 是通过引起 SystemExit 异常实现的，所以可以在外层捕获该
+异常，执行一些清理工作
+#+BEGIN_SRC python
+  try:
+      sys.exit()
+  except SystemExit:
+      print("I don't want to exit")
+#+END_SRC
+可选参数 arg 可以是整数表示退出状态，默认为0。也可以是其它类型，除了
+None 的退出状态码是0外，其它的类型都是直接打印到 stderr 并且退出状态码
+为1。
+
+* os._exit
+os._exit(n) 以状态码 n 退出进程，不会调用清理过程、冲洗缓冲区等。所以
+只应该用在 fork() 的子进程中。由于调用的是操作系统的退出函数，而不同
+系统的退出不一样，python 通常 os._exit() 提供统一的退出方式。os 库中还
+定义了一些退出状态码常量： EX_OK, EX_USAGE, EX_NOINPUT, EX_NOUSER,
+EX_NOHOST, EX_UNAVAILABLE, EX_SOFTWARE, EX_OSFILE, EX_CANTCREAT,
+EX_IOERR, EX_TEMPFAIL, EX_PROTOCOL, EX_NOPERM, EX_CONFIG, EX_NOTFOUND。
+这些常量用于 POSIX 编程中(Windows 下不可用)，可以避免使用魔法数字。
+#+BEGIN_SRC python
+  _names = sys.builtin_module_names
+  __all__ = ["altsep", "curdir", "pardir", "sep", "pathsep", "linesep",
+             "defpath", "name", "path", "devnull", "SEEK_SET", "SEEK_CUR",
+             "SEEK_END", "fsencode", "fsdecode", "get_exec_path", "fdopen",
+             "popen", "extsep"]
+
+  if 'posix' in _names:
+      name = 'posix'
+      linesep = '\n'
+      from posix import *
+      try:
+          from posix import _exit
+          __all__.append('_exit')
+      except ImportError:
+          pass
+      import posixpath as path
+
+      try:
+          from posix import _have_functions
+      except ImportError:
+          pass
+
+  elif 'nt' in _names:
+      name = 'nt'
+      linesep = '\r\n'
+      from nt import *
+      try:
+          from nt import _exit
+          __all__.append('_exit')
+      except ImportError:
+          pass
+      import ntpath as path
+
+      import nt
+      __all__.extend(_get_exports_list(nt))
+      del nt
+
+      try:
+          from nt import _have_functions
+      except ImportError:
+          pass
+
+  elif 'ce' in _names:
+      name = 'ce'
+      linesep = '\r\n'
+      from ce import *
+      try:
+          from ce import _exit
+          __all__.append('_exit')
+      except ImportError:
+          pass
+      # We can use the standard Windows path.
+      import ntpath as path
+
+      import ce
+      __all__.extend(_get_exports_list(ce))
+      del ce
+
+      try:
+          from ce import _have_functions
+      except ImportError:
+          pass
+
+  else:
+      raise ImportError('no os specific module found')
+#+END_SRC
+
+* atexit
+atexit 模块可以定义清理函数，用于注册和反注册到退出中。执行顺序与注册
+顺序相反，非 python 发出的退出信号不会调用清理函数，例如外部程序发送的
+kill 信号，调用 os._exit() 函数
+
++ atexit.register(func, *args, **kwargs)
+
+  程序正常终止时会按注册相反顺序执行注册的函数，同一个函数可以多次注册，
+  该函数返回 func，可作为装饰器
+
++ atexit.unregister(func)
+
+  取消注册，多次注册的函数会一次取消，没有注册的函数会 pass 掉
+
+#+BEGIN_SRC python
+  def goodbye(name, adjective):
+      print('Goodbye, %s, it was %s to meet you.' % (name, adjective))
+
+  import atexit
+  atexit.register(goodbye, 'Donny', 'nice')
+  # or:
+  atexit.register(goodbye, adjective='nice', name='Donny')
+#+END_SRC
