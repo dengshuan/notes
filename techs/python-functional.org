@@ -1,0 +1,313 @@
+#+TITLE: Python 函数式编程
+#+DATE: <2015-01-05>
+#+KEYWORDS: functional-programming, iterator, generator, next, iter, yield
+
+python 标准库中提供了 [[https://docs.python.org/3/library/itertools.html][itertools]], [[https://docs.python.org/3/library/functools.html][functools]], [[https://docs.python.org/3/library/operator.html][operator]] 三个库支持函数式
+编程，对高阶函数的支持，python 提供 [[python-decorator.org][decorator 语法糖]]。 迭代器
+([[https://docs.python.org/3/tutorial/classes.html#iterators][iterator]])和生成器([[https://docs.python.org/3/tutorial/classes.html#generators][generator]])概念是 python 函数式编程的基础，利用迭代
+器和生成器可以实现函数式编程中经常用到的 [[https://docs.python.org/3/library/functions.html#map][map]](), [[https://docs.python.org/3/library/functions.html#filter][filter()]], [[https://docs.python.org/3/library/functools.html#functools.reduce][reduce()]] 等
+过程以及 itertools, functools 中提供的绝大部分功能。
+
+* 迭代器和生成器基础(next, iter, yield)
+迭代器和生成器依赖于 [[https://docs.python.org/3/library/functions.html#next][next()]], [[https://docs.python.org/3/library/functions.html#iter][iter()]] 方法和 [[https://docs.python.org/3/reference/expressions.html#yieldexpr][yield]] 表达式
+
+** next 函数
+next(iterator[, default]) 是内置的函数，通过调用 __next__() 方法取得
+iterator 的下一个元素，所有元素消耗完再调用就会引起 StopIteration 异常。
+如果提供了 default 参数，则当取完所有元素后，再调用 next 时会返回
+default 值，而不是引起 StopIteration 异常。
+
+
+** iter 函数
+iter(object[, sentinel]) 内置函数会返回一个迭代器。没有第2个参数时，
+object 必须支持迭代协议(__iter__() 方法) 或序列协议(__getitem__() 方法)，
+否则会引起 TypeError 异常。如果有哨兵(sentinel)参数，object 必须是可调
+用的对象，这种方式创建的迭代器每次调用 __next__() 方法时会以无参的形式
+调用 object，如果返回值等于哨兵就会引起 StopIteration 异常，否则就返回
+这个值
+#+BEGIN_SRC python
+  with open('mydata.txt') as fp:
+      for line in iter(fp.readline, ''):
+          process_line(line)
+#+END_SRC
+
+
+** yield 表达式
+yield 英文意思是生产，是 python 的关键字，在函数返回值时用来替换
+return 产生一个值。yield 表达式只能用于定义生成器函数中，在函数外使用
+yield 会导致 =SyntaxError: 'yield' outside function= 。
+
+生成器控制生成器函数的执行，当调用生成器的某个函数时，开始执行，遇到第
+一个 yield 表达式时，返回 yield 后面表达式的值，然后被挂起(suspend)，
+挂起时保持所有的局部状态，包括局部变量绑定、指令指针、内部的求值栈、异
+常处理状态；当再次调用生成器的某个方法时，执行流会恢复。
+
+所以生成器函数非常像协程([[http://en.wikipedia.org/wiki/Coroutine][coroutine]] ，其它语言中的概念)，两者都会 yield
+多次，有多个入口，执行流会被挂起。唯一的区别是生成器函数不能控制 yield
+之后，执行流应该从哪继续，控制总是被转移到生成器的调用者，所以又被称为
+半协程(semicoroutine)。
+
+
+
+* 迭代器(iterator)
+迭代器(iterator)必须至少要定义 __iter__() 和 __next__() 两个方法，通过
+iter() 和 next() 函数调用。iter() 生成一个迭代器，next() 每调用一次都
+会返回下一个值，如果已经到最后一个值了，那么再调用 next() 就会引起
+StopIteration 异常。
+#+BEGIN_SRC python
+  class Reverse:
+      """Iterator for looping over a sequence backwards."""
+      def __init__(self, data):
+          self.data = data
+          self.index = len(data)
+      def __iter__(self):
+          return self
+      def __next__(self):
+          if self.index == 0:
+              raise StopIteration
+          self.index = self.index - 1
+          return self.data[self.index]
+#+END_SRC
+
+for 循环实际上就是先将 iter() 作用到容器对象上生成迭代器，然后每次调用
+next()，当引起 StopIteration 时就终止 for 循环。
+#+BEGIN_SRC python
+  for element in ['a', 'b', 'c']:
+      print(element)
+
+  # 等价于：
+  it = iter(['a', 'b', 'c'])
+  try:
+      while True:
+          print(next(it))
+  except StopIteration:
+      pass
+#+END_SRC
+
+
+* 生成器(generator)
+生成器(generator)是用来生成迭代器的函数。与普通函数相同，只是返回值时
+用 yield 而不是 return。局部变量和执行状态在调用之间会自动保存
+#+BEGIN_SRC python
+  def reverse(data):
+      for index in range(len(data)-1, -1, -1):
+          yield data[index]
+#+END_SRC
+能用 generator(函数) 实现的都可以用 iterator(类) 实现，不过生成器 会自
+动创建 __iter__() 和 __next__() 方法，终止时也会自动引起 StopIteration
+异常，因而显得更紧凑。
+
+利用生成器表达式(generator expression)可以不用专门定义一个 generator
+函数，直接就地使用。生成器表达式与列表表达式(list comprehension)类似，
+只不过用的是圆括号而不是方括号，由于生成器只保存上次执行的状态，所以相
+比列表表达式，生成器表达式占用内存更少。
+
+** 流——序列
+生成器本质上相当于函数式编程语言中的流的概念，流表面上看是一个序列，但
+这个序列不是一次构造出来的，而是在需要时构建，函数式编程语言中流是通过
+惰性求值实现的，可以看到 python 是通过关键词 yield 实现的。
+
+使用流的概念可以避免命令式程序设计中赋值带来的副作用，同时更加简洁优雅。
+用序列模拟时间变化，相当于是坐标变换，当我们观察一个正在移动的粒子时，
+我们说该粒子的位置(状态)正在变化，而从粒子的世界线的观点看，这里就根本
+不涉及任何变化[fn:1]
+
+TODO: 补充例子
+
+python3 将 python2 中许多列表改成了迭代器，更加函数式了，例如 range(),
+zip() 在 python2 中返回列表，而 python3 中返回一个迭代器，由于迭代器只
+是在需要(next())时取元素而不是一次就构建整个列表，所以可以表示非常大的
+序列甚至无穷序列。
+
+
+* 生成器——迭代器方法(generator-iterator method)
+ [[https://docs.python.org/3/reference/expressions.html#generator-iterator-methods][生成器——迭代器方法]] 可以用来控制生成器函数的执行流
++ __next__()
++ send(value)
+  恢复执行流，并将 value 发送到生成器函数，value 作为当前 yield 表达式的值
++ throw(type[, value[, traceback]])
+  在生成器暂停的地方引起 type 类型的异常，并返回生成器函数产生的下一个值
++ close
+#+BEGIN_SRC python
+  >>> def echo(value=None):
+  ...     print("Execution starts when 'next()' is called for the first time.")
+  ...     try:
+  ...         while True:
+  ...             try:
+  ...                 value = (yield value)
+  ...             except Exception as e:
+  ...                 value = e
+  ...     finally:
+  ...         print("Don't forget to clean up when 'close()' is called.")
+  ...
+  >>> generator = echo(1)
+  >>> print(next(generator))
+  Execution starts when 'next()' is called for the first time.
+  1
+  >>> print(next(generator))
+  None
+  >>> print(generator.send(2))
+  2
+  >>> generator.throw(TypeError, "spam")
+  TypeError('spam',)
+  >>> generator.close()
+  Don't forget to clean up when 'close()' is called.
+#+END_SRC
+
+
+* 应用
+有了上面迭代器和生成器，就可以实现各种函数式编程了，下面是函数式编程中
+常用的几个函数，更多例子可以查看 [[https://docs.python.org/3/library/itertools.html][itertools 文档]]
+** map 函数
+当 map(function, iterable,...) 接收 n 个 iterable 时，每次在各
+iterable 中各取一个元素传给 function 作参数，所以 function 必须能够接
+收 n 个参数，当各个 iterable 长度不一样时按最短的终止，例如 map(lambda
+x,y: x+y, [1,2], [3,4], [5,6]) 会报错，map(lambda x,y: x+y, 'abcd',
+'def') 返回的迭代器依次为 'ad', 'be', 'cf'
+#+BEGIN_SRC python
+  # 这个实现不好，用到了 zip，不过 zip 也可以通过生成器实现(见后面)
+  def map(function, *iterables):
+      for args in zip(*iterables):
+          yield function(*args)
+#+END_SRC
+[[https://docs.python.org/3/library/itertools.html#itertools.starmap][itertools.starmap(function, iterable)]] 只接收一个 iterable，当 function
+接收多个参数时，各个参数是放在元组中的，例如 itertools.starmap(pow,
+[(2,5), (3,2), (10,3)]) 返回迭代器的值依次为 32, 9, 1000。
+#+BEGIN_SRC python
+  def starmap(function, iterable):
+      for args in iterable:
+          yield function(*args)
+#+END_SRC
+** filter 函数
+filter(function, iterable)函数相当于生成器表达式 (item for item in
+iterable if function(item))，没有提供 function 参数时相当于 (item for
+item in iterable if item)
+
+itertools 中提供 [[https://docs.python.org/3/library/itertools.html#itertools.filterfalse][filterfalse(predicate, iterable)]] 函数，
+filterfalse(lambda x: x%2, range(10)) 得到 0,2,4,6,8, 的迭代器
+#+BEGIN_SRC python
+  def filterfalse(predicate, iterable):
+      if predicate i None:
+          predicate = bool
+      for x in iterable:
+          if not predicate(x):
+              yield x
+#+END_SRC
+** reduce 函数
+[[https://docs.python.org/3/library/functools.html#functools.reduce][reduce]](function, iterable[, initializer]) 函数将 function 从左到右两个
+两个地累计作用到 iterable 上，从而将 iterable 归约到一个值，例如
+reduce(lambda x, y: x+y, [1,2,3,4]) 会计算 (((1+2)+3)+4)，从而得到10。
+python3 已经将内置的 reduce 函数移到 functools 模块中了
+#+BEGIN_SRC python
+  def reduce(function, iterable, initializer=None):
+      it = iter(iterable)
+      if initializer is None:
+          value = next(it)
+      else:
+          value = initializer
+      for element in it:
+          value = function(value, element)
+      return value
+#+END_SRC
+** 枚举函数(enumerate)
+[[https://docs.python.org/3/library/functions.html#enumerate][enumerate(iterable, start=0)]] 生成一个枚举迭代器，每次调用 next() 时会
+返回一个元组，包含计数(从 start 开始)和值(iterable)
+#+BEGIN_SRC python
+  seasons = ['Spring', 'Summer', 'Fall', 'Winter']
+  list(enumerate(seasons)) # => [(0, 'Spring'), (1, 'Summer'), (2, 'Fall'), (3, 'Winter')]
+  list(enumerate(seasons, start=1)) # => [(1, 'Spring'), (2, 'Summer'), (3, 'Fall'), (4, 'Winter')]
+#+END_SRC
+可以利用生成器实现 enumerate
+#+BEGIN_SRC python
+  def enumerate(sequence, start=0):
+      n = start
+      for elem in sequence:
+          yield n, elem
+          n += 1
+#+END_SRC
+** zip 函数
+[[https://docs.python.org/3/library/functions.html#zip][zip(*iterables)]] 返回元组迭代器，iterables 长度不同时，按最短的截断，
+itertools 模块中有 zip_longest() 函数。
+#+BEGIN_SRC python
+  a = [1, 2, 3]
+  b = [1, 4, 9]
+  c = [1, 8, 27]
+  list(zip(a, b, c))
+  # => [(1,1,1), (2,4,8), (3,9,27)]
+#+END_SRC
+利用生成器实现 zip
+#+BEGIN_SRC python
+  def zip(*iterables):
+      sentinel = object()
+      iterators = [iter(it) for it in iterables]
+      while iterators:
+          result = []
+          for it in iterators:
+              elem = next(it, sentinel)
+              if elem in sentinel:
+                  return
+              result.append(elem)
+          yield tuple(result)
+#+END_SRC
+** 累积器(accumulate)
+标准库 itertools 提供 [[https://docs.python.org/3/library/itertools.html#itertools.accumulate][accumulate]](iterable[,func]) 函数，将 func 函数作
+用到 iterable 相邻元素上，累计起来，返回的也是一个迭代器。例如
+accumulate([1,2,3,4,5]) 返回迭代器，其值依次为 1, 3, 6, 10, 15，而
+accumulate([1, 2, 3, 4, 5], operator.mul) 则返回迭代器的值依次为 1, 2,
+6, 24, 120
+
+同样也可以用生成器实现 accumulate
+#+BEGIN_SRC python
+  def accumulate(iterable, func=operator.add):
+      it = iter(iterable)
+      total = next(it)
+      yield total
+      for element in it:
+          total = func(total, element)
+          yield total
+#+END_SRC
+** 循环函数(cycle)
+[[https://docs.python.org/3/library/itertools.html#itertools.cycle][itertools.cycle(iterable)]] 将 iterable 串起来作为 iterator 返回，是无穷
+循环。例如 cycle('ABCD') 返回迭代器，其值是 A B C D A B C D A ...
+
+利用生成器实现 cycle
+#+BEGIN_SRC python
+  def cycle(iterable):
+      saved = []
+      for element in iterable:
+          yield element
+          saved.append(element)
+      while saved:
+          for element in saved:
+              yield element
+#+END_SRC
+** groupby 函数
+利用迭代器实现 [[https://docs.python.org/3/library/itertools.html#itertools.groupby][groupby]]
+#+BEGIN_SRC python
+  class groupby:
+      # [k for k, g in groupby('AAAABBBCCDAABBB')] --> A B C D A B
+      # [list(g) for k, g in groupby('AAAABBBCCD')] --> AAAA BBB CC D
+      def __init__(self, iterable, key=None):
+          if key is None:
+              key = lambda x: x
+          self.keyfunc = key
+          self.it = iter(iterable)
+          self.tgtkey = self.currkey = self.currvalue = object()
+      def __iter__(self):
+          return self
+      def __next__(self):
+          while self.currkey == self.tgtkey:
+              self.currvalue = next(self.it)    # Exit on StopIteration
+              self.currkey = self.keyfunc(self.currvalue)
+          self.tgtkey = self.currkey
+          return (self.currkey, self._grouper(self.tgtkey))
+      def _grouper(self, tgtkey):
+          while self.currkey == tgtkey:
+              yield self.currvalue
+              self.currvalue = next(self.it)    # Exit on StopIteration
+              self.currkey = self.keyfunc(self.currvalue)
+#+END_SRC
+
+* Footnotes
+
+[fn:1] 《计算机程序的构造和解释》 3.5节
