@@ -1,0 +1,44 @@
+This is my [[http://dengshuan.me][notes]], all written in Emacs.
+
+
+* Configuration files
+
++ [[code/setup.el][setup.el]]
++ [[code/nginx.conf][nginx.conf]]
++ [[code/post-receive][post-receive]]
+
+
+
+* Configure Server
+
+1. Add =server= section in [[code/nginx.conf][nginx.conf]] to _/etc/nginx/nginx.conf_ =http= section
+2. Add =127.0.0.1 blog= to _/etc/hosts_
+3. Restart nginx server
+4. Create folder _~/notes_ and _~/notes.git_, and make sure Home folder _$HOME_ have executable permission which means can enter
+5. Link _~/notes_ to _/srv/http/_ by =sudo ln -s /home/your-username/notes /srv/http/=
+6. Run =git init --bare= in _~/notes.git/_
+7. Copy [[code/post-receive][post-receive]] to _~/notes.git/hooks/_ and make it executable by =chmod +x ~/notes.git/hooks/post-receive=
+
+
+
+* Work flow
+
+1. Write draft note in org format within _drafts_ folder
+2. Move completed draft note from root folder or sub-folder: _life_, _misc_, _techs_, _trans_
+3. Run =M-x org-publish-project RET notes RET=
+4. Push rencent generated html in _~/public_html_ to VPS
+5. Push org files to GitHub (Optional)
+
+
+
+* Format Conventions
+
++ folders and path: underlined
++ files: italic
++ code and command: monospace
++ environment varialbes: bold
++ blank lines:
+  
+  3 blank lines between sections, 2 blank lines between lists(unless
+  they're compact enough), 1 blank line between heading/list and its
+  content
