@@ -39,6 +39,6 @@ This is my [[http://dengshuan.me][notes]], all written in Emacs.
 + environment varialbes: bold
 + blank lines:
   
-  3 blank lines between sections, 2 blank lines between lists(unless
-  they're compact enough), 1 blank line between heading/list and its
-  content
+  - 3 blank lines between sections
+  - 2 blank lines between lists (unless they're compact enough)
+  - 1 blank line between heading/list and its content
