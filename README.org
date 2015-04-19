@@ -42,3 +42,12 @@ This is my [[http://dengshuan.me][notes]], all written in Emacs.
   - 3 blank lines between sections
   - 2 blank lines between lists (unless they're compact enough)
   - 1 blank line between heading/list and its content
+
+
++ parenthesis: 
+  
+  use parenthesis according to its content, namely half-width
+  parenthesis around English text, otherwise full-width parenthesis
+
+
++ mixed English and Chinese: use one space between them
