@@ -7,6 +7,7 @@
    <div id='navigation'>
        <ul>
            <li><a href='/'>Home</a></li>
+           <li><a href='https://github.com/dengshuan/notes/issues'>Comments</a></li>
            <li><a href='https://github.com/dengshuan/notes'>Source</a></li>
            <li><a href='/about.html'>About</a></li>
        </ul>
