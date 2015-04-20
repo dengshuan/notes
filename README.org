@@ -1,12 +1,10 @@
 This is my [[http://dengshuan.me][notes]], all written in Emacs.
 
-
 * Configuration files
 
 + [[code/setup.el][setup.el]]
 + [[code/nginx.conf][nginx.conf]]
 + [[code/post-receive][post-receive]]
-
 
 
 * Configure Server
@@ -20,7 +18,6 @@ This is my [[http://dengshuan.me][notes]], all written in Emacs.
 7. Copy [[code/post-receive][post-receive]] to _~/notes.git/hooks/_ and make it executable by =chmod +x ~/notes.git/hooks/post-receive=
 
 
-
 * Work flow
 
 1. Write draft note in org format within _drafts_ folder
@@ -28,7 +25,6 @@ This is my [[http://dengshuan.me][notes]], all written in Emacs.
 3. Run =M-x org-publish-project RET notes RET=
 4. Push rencent generated html in _~/public_html_ to VPS
 5. Push org files to GitHub (Optional)
-
 
 
 * Format Conventions
@@ -39,15 +35,14 @@ This is my [[http://dengshuan.me][notes]], all written in Emacs.
 + environment varialbes: bold
 + blank lines:
   
-  - 3 blank lines between sections
-  - 2 blank lines between lists (unless they're compact enough)
+  - 2 blank lines between sections (2 lines enough to seperate section from list)
+  - 1 blank lines between lists (unless they're compact enough)
+    (org-mode thinks 2 lines are different lists)
   - 1 blank line between heading/list and its content
-
 
 + parenthesis: 
   
   use parenthesis according to its content, namely half-width
   parenthesis around English text, otherwise full-width parenthesis
-
 
 + mixed English and Chinese: use one space between them

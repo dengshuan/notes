@@ -7,13 +7,14 @@
    <div id='navigation'>
        <ul>
            <li><a href='/'>Home</a></li>
+           <li><a href='https://github.com/dengshuan/notes'>Source</a></li>
            <li><a href='/about.html'>About</a></li>
        </ul>
    </div>"
   )
 
 (defvar site-postamble
-  "<div id='footer'>&copy;Copyright by Dengshuan</div>"
+  "<div id='footer'>&copy;Copyright by Dengshuan 2015</div>"
   )
 
 (setq org-image-actual-width '(300))
@@ -24,7 +25,7 @@
 	 :base-extension "org"
 	 :publishing-directory "~/public_html/"
 	 :publishing-function org-html-publish-to-html
-	 :exclude "drafts\\|private\\|todo" ;; ignore drafts, private, todo
+	 :exclude "drafts\\|private\\|todo\\|README" ;; ignore drafts, private, todo
 	 :headline-levels 4
 	 :makeindex nil
 	 :with-tags t

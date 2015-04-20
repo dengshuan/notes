@@ -8,7 +8,6 @@ Python 的反射相对来说是比较高级的功能，网上介绍反射的文�
 谈，所举例子大多看起来没什么用。
 
 
-
 * 问题
 
 在自己用 Flask 做网站时用到 WTForms 库，写了很多看起来类似的代码，但发
@@ -35,7 +34,6 @@ field 作为变量放在 form 和 data 之间，但是 Python 不像 Lisp 那样
 #+END_SRC
 
 
-
 * 解决方案
 
 Google 一下 [[https://www.google.com/?q%3Dpython%20variable%20as%20attribute][python variable as attribute]] 找到 Stack Overflow 这个[[http://stackoverflow.com/questions/17056450/python-reference-an-object-attribute-by-variable-name][帖子]]
@@ -59,7 +57,6 @@ Google 一下 [[https://www.google.com/?q%3Dpython%20variable%20as%20attribute][
 Python 内置丰富的数据结构也可以大幅简化程序，很多时候重复的部分用几行
 循环就可以完成，简洁明了也不容易出错，而 Python 中很多数据结构都可以迭
 代。
-
 
 
 * 拓展

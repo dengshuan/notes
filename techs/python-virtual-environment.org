@@ -39,14 +39,12 @@ _include_ 等目录，通过 =source myvenv/bin/activate= 切换到虚拟环境�
 6. 插件系统提供可分享的扩展
 
 
-
 * Basic
 
 1. 安装
    #+BEGIN_SRC sh
      pip install virtualenvwrapper --user
    #+END_SRC
-
 
 2. 设置环境变量
    #+BEGIN_SRC sh
@@ -55,13 +53,11 @@ _include_ 等目录，通过 =source myvenv/bin/activate= 切换到虚拟环境�
    #+END_SRC
    为了以后 shell 都可以使用，应当将这两条加入 /.bashrc/ 或 /.zshrc/ 中
 
-
 3. 加载 virtualenvwrapper
    #+BEGIN_SRC sh
      source $HOME/.local/bin/virtualenvwrapper.sh
    #+END_SRC
    同样也将这句添加到 /.bashrc/ 或 /.zshrc/ 中
-
 
 4. 新建虚拟环境
    #+BEGIN_SRC sh
@@ -69,12 +65,10 @@ _include_ 等目录，通过 =source myvenv/bin/activate= 切换到虚拟环境�
    #+END_SRC
    创建完会自动切换到新虚拟环境
 
-
 5. 为虚拟环境安装 packages
    #+BEGIN_SRC sh
      pip install flask flask-sqlalchemy ...
    #+END_SRC
-
 
 6. 项目开发
    #+BEGIN_SRC sh
@@ -83,7 +77,6 @@ _include_ 等目录，通过 =source myvenv/bin/activate= 切换到虚拟环境�
      # 或者切换到虚拟环境
      workon myenv1                   # 任何目录下都可以执行这个命令，且支持自动补全
    #+END_SRC
-
 
 
 * Commands
@@ -107,14 +100,12 @@ _include_ 等目录，通过 =source myvenv/bin/activate= 切换到虚拟环境�
   令可以在任何地方使用，随时方便地切换到虚拟环境，同时还提供 [[Hooks][hooks]]，可
   以在激活虚拟环境后自动执行一些命令，比如自动切换到项目目录
 
-
 + mktmpenv
 
   有时想新建一个临时环境测试一下，用完就立即删掉，那么这条命令最合适了。
   这条命令会在 *WORKON_HOME* 目录下创建一个临时虚拟环境，自动分配一个唯
   一的名字，同时切换到这个虚拟环境及其目录，测试完后 =deactivate= 之后会
   自动删除这个临时的虚拟环境
-
 
 + lsvirtualenv
 + showvirtualenv
@@ -125,30 +116,25 @@ _include_ 等目录，通过 =source myvenv/bin/activate= 切换到虚拟环境�
   这几条命令所执行的命令如名字所描述的那样，其中 cpvirtualenv 可能会由
   于虚拟环境中存在硬编码路径而出问题，所以不建议使用
 
-
 + allvirtualenv
 
   在所有虚拟环境中执行命令，例如 =allvirtualenv pip install -U pip= 升
   级所有虚拟环境的 pip
 
-
 + deactivate
 
   这个命令就是 virtualenv 提供的，但添加了 [[Hooks][hooks]] 支持
-
 
 + lssitepackages
 + cdsitepackages
 
   这两条命令正如名字所说，列出或进到当前虚拟环境的 _site-packages_ 目录
 
-
 + toggleglobalsitepackages
 
   开关全局环境，这条非常实用，项目开发有时想临时使用系统安装的某个库，
   而创建虚拟环境时又没有使用全局环境，可以用这个开关打开全局环境。如果
   不想用了，再次使用这个命令也可以关掉
-
 
 + mkproject
 
@@ -158,16 +144,13 @@ _include_ 等目录，通过 =source myvenv/bin/activate= 切换到虚拟环境�
   录 _$PROJECT_HOME/myproject_ 下。因为使用 virtualenv 通常也是这个流程，
   所以 virtualevnwrapper 为我们包装了这样一个简单命令
 
-
 + cdproject
 
   字面意思
 
-
 + setvirtualenvproject
   
   将已有项目与已有虚拟环境绑定： =setvirtualenvproject myvenv myproject=
-
 
 + add2virtualenv
 
@@ -177,16 +160,13 @@ _include_ 等目录，通过 =source myvenv/bin/activate= 切换到虚拟环境�
   django 后，在 python shell 中直接就可以正常使用 django 包了： =from
   django.http import request=
 
-
 + wipeenv
 
   删除当前虚拟环境下所有的第三方库
 
-
 + virtualenvwrapper
 
   列出上面所有命令和及其说明
-
 
 
 * Hooks
@@ -200,7 +180,6 @@ global hook 脚本放在 *$VIRTUALENVWRAPPER_HOOK_DIR* （默认与
 
   每次加载 virtualenvwrapper.sh 后执行，用处不是很大
 
-
 + get_env_details
   
   为每个虚拟环境添加详细信息，使用 lsvirtualenv, showvirtualenv 命令时
@@ -212,7 +191,6 @@ global hook 脚本放在 *$VIRTUALENVWRAPPER_HOOK_DIR* （默认与
     # file: $WORKON_HOME/env1/bin/get_env_details
     echo "This virtualenv is for developing flask apps"
   #+END_SRC
-
 
 + pre/post hooks
 
@@ -229,7 +207,6 @@ global hook 脚本放在 *$VIRTUALENVWRAPPER_HOOK_DIR* （默认与
     export APP_CONFIG_FILE=$PROJECT_HOME/myapp/config/development.py
     cd $PROJECT_HOME/myapp
   #+END_SRC
-
 
 
 * Extensions

@@ -8,19 +8,26 @@ SSH（Secure SHell）是用来安全的进行远程连接的协议，最常用�
 认证等，不过使用不当会存在一些问题，在这里记录一下这些用途和使用中可能
 会碰到的一些问题。
 
+
 * SSH 攻击
+
 服务器上的 SSH 端口尽量不要用默认的 22，而要改成较高的端口，可以避免遭
 到暴力攻击。之前在 [[https://www.digitalocean.com][Digitalocean]] 上的 VPS 没有更改 SSH 端口，就遇到暴力
 破解，在 [[http://www.v2ex.com/t/143428][V2EX]] 上曾讨论过。
 
 将 22 端口换成 2222 端口：
-1. 修改 /etc/ssh/sshd_config ，将 Port 那行改成 =Port 2222=
+
+1. 修改 _/etc/ssh/sshd_config_ ，将 Port 那行改成 =Port 2222=
+
 2. 修改防火墙配置
+
    #+BEGIN_EXAMPLE
    sudo iptables -A INPUT -p tcp --dport 2222 -j ACCEPT
    sudo iptables-save > /etc/iptables/iptables.rules
    #+END_EXAMPLE
+
 3. 重启服务
+
    #+BEGIN_EXAMPLE
    sudo systemctl restart sshd
    sudo systemctl restart iptables
@@ -39,10 +46,9 @@ SSH（Secure SHell）是用来安全的进行远程连接的协议，最常用�
   cat ~/id_rsa.pub >> ~/.ssh/authorized_keys # if no ~/.ssh directory, just create it
   chmod 600 ~/.ssh/authorized_keys
 #+END_SRC
-上面的拷贝过程也可以通过 ssh-copy-id 脚本一步完成。 =ssh-copy-id -i
-~/.ssh/id_rsa.pub MY-USERNAME@MY-VPS=
+上面的拷贝过程也可以通过 ssh-copy-id 脚本一步完成。 =ssh-copy-id -i ~/.ssh/id_rsa.pub MY-USERNAME@MY-VPS=
 
-为方便本机 ssh 到 VPS，可以将 VPS 信息写入 ssh 配置文件 ~/.ssh/config
+为方便本机 ssh 到 VPS，可以将 VPS 信息写入 ssh 配置文件 _~/.ssh/config_
 #+BEGIN_SRC conf
   Host DO
        HostName MY-VPS-HOSTNAME
@@ -51,10 +57,12 @@ SSH（Secure SHell）是用来安全的进行远程连接的协议，最常用�
        IdentityFile ~/.ssh/id_rsa
 #+END_SRC
 然后就可以通过 =ssh DO= 连接到 VPS 了，利用 scp 命令拷贝时也可以直接
-=scp some-file DO:/home/some-directory= ， "DO" 可以是随便一个容易记住
+=scp some-file DO:/home/some-directory= ， =DO= 可以是随便一个容易记住
 的名字
 
+
 * 拯救死掉的桌面
+
 Linux 系有许多桌面环境，但都远远没有其网络服务稳定，偶尔会遇到桌面死掉
 停止响应，好点的情况是可以通过 =Ctrl+Alt+FN= 进入控制台，然后杀死占用
 资源的进程或重启 X。最糟糕的是输入各种按键都不起作用，只能强行长按电源
@@ -71,7 +79,9 @@ Linux 系有许多桌面环境，但都远远没有其网络服务稳定，偶�
 另外如果不能 ssh 到电脑，但内核开启了[[http://en.wikipedia.org/wiki/Magic_SysRq_key][=Sys Rq= 魔法键]]的话，可以通过
 =Sys Rq= 键安全的重启系统，所以长按电源关机是最下下策。
 
+
 * SSH 隧道代理
+
 现在比较流行用 [[https://github.com/clowwindy/shadowsocks][Shadowsocks]] 代理，其实要是有个国外 VPS 的话，直接通过
 SSH Tunnel Proxy 就可以直接穿墙了，不用安装配置任何软件。
 
@@ -89,9 +99,10 @@ SSH Tunnel Proxy 就可以直接穿墙了，不用安装配置任何软件。
 #+BEGIN_EXAMPLE
 ssh -Nf -D 1080 USER-NAME@MY-SERVER
 #+END_EXAMPLE
+
 + =-N= 只转发而不执行远程命令
 + =-f= 后台执行
-+ =-D= 指定本地动态应用层端口转发，例如上面的指定本地1080端口（Socks默认端口）
++ =-D= 指定本地动态应用层端口转发，例如上面的指定本地 1080 端口（Socks默认端口）
 
 当然如果 VPS 的 SSH 不是默认的 22 端口，还需要通过 =-P= 选项指定端口，例如 =-P 2222=
 
@@ -100,7 +111,9 @@ ssh -Nf -D 1080 USER-NAME@MY-SERVER
 #+ATTR_HTML: :width 800
 [[../images/Firefox-Socks-Proxy.png]]
 
+
 * GitHub 多帐户
+
 GitHub 使用 https 协议进行操作时，每次都需要输入密码，通过 ssh 协议可
 以利用 ssh key 来认证，这样就不用每次都输入密码了。关于如何利用 GitHub
 的 SSH，GitHub 官网上给出了比较详细的[[https://help.github.com/articles/generating-ssh-keys/][步骤]]。
@@ -109,12 +122,15 @@ GitHub 使用 https 协议进行操作时，每次都需要输入密码，通过
 脑上进行操作时就会存在一些问题。我在 GitHub 上开了一个小号，通过 SSH
 认证时就存在各种问题，从这个 [[https://gist.github.com/jexchan/2351996][gist]] 找到了解决方法，在这里简单记录一下。
 
-1. 通过 ssh-keygen 生成两份 key，分别命名为 id_rsa_user1 和 id_rsa_user2
+1. 通过 ssh-keygen 生成两份 key，分别命名为 /id_rsa_user1/ 和 /id_rsa_user2/
+
    #+BEGIN_SRC sh
      ssh-keygen -t rsa -C "user1@gmail.com" # save key to ~/.ssh/id_rsa_user1
      ssh-keygen -t rsa -C "user2@gmail.com" # save key to ~/.ssh/id_rsa_user2
    #+END_SRC
-2. 在 ~/.ssh/config 中添加
+
+2. 在 _~/.ssh/config_ 中添加
+
    #+BEGIN_SRC conf
      Host user1.github.com
           HostName github.com
@@ -128,17 +144,21 @@ GitHub 使用 https 协议进行操作时，每次都需要输入密码，通过
           PreferredAuthentications publickey
           IdentityFile ~/.ssh/id_rsa_user2
    #+END_SRC
+
 3. 克隆 user1 的 repo
+
    #+BEGIN_EXAMPLE
    git clone user1.github.com:user1/your-repo.git
    #+END_EXAMPLE
    
-   创建新的 repo 的话也需要确保 =["remote origin"]= 部分是 =url =
-   user1.github.com:user1/your-repo.git= ，即必须是 ssh 访问的，而不是
-   https 访问的。这样 git 在读到这样的配置时会调用 ssh 完成远程连接相
-   关的操作，ssh 又会读取自身配置文件 *~/.ssh/* ，根据这个 url 找到
-   ~/.ssh/config 中对应的项，调用对应的 ssh key 进行授权
+   创建新的 repo 的话也需要确保 =["remote origin"]= 部分是
+   ~url=user1.github.com:user1/your-repo.git~ ，即必须是 ssh 访问的，
+   而不是https 访问的。这样 git 在读到这样的配置时会调用 ssh 完成远程
+   连接相关的操作，ssh 又会读取自身配置文件 _~/.ssh/_ ，根据这个 url
+   找到 _~/.ssh/config_ 中对应的项，调用对应的 ssh key 进行授权
+
 4. 在 user1 的项目中运行
+
    #+BEGIN_SRC sh
      ssh-add ~/.ssh/id_rsa_user1
      git conifg user.name "user1's name"
@@ -147,5 +167,4 @@ GitHub 使用 https 协议进行操作时，每次都需要输入密码，通过
    *注意：* 这步必须有 =ssh-add ~/.ssh/id_rsa_user1= ，将对应用户的 ssh key 授权给 agent: git
 
    + =ssh-add -l= 列出当前授权的 ssh key
-
    + =ssh-add -D= 删除所有授权的 ssh key
