@@ -1,0 +1,84 @@
+#+TITLE: Python 反射在 WTForms 中的应用
+#+DATE: <2015-04-16>
+#+KEYWORDS: python, python reflection, python introspection, DRY(Don't Repeat Yourself)
+#+DESCRIPTION: 反射的实际开发中的应用，DRY(Don't Repeat Yourself)：利用 Python 的反射去掉重复代码
+
+Python 的反射相对来说是比较高级的功能，网上介绍反射的文章很多，但这种
+强大的工具在实际运用中有什么用途一般都没有提到，基本都只是就这个知识来
+谈，所举例子大多看起来没什么用。
+
+
+
+* 问题
+
+在自己用 Flask 做网站时用到 WTForms 库，写了很多看起来类似的代码，但发
+现没法通过简单的方法去掉这些重复。具体就是表单 form 有很多域，处理表单
+数据时总是重复地输入 ~<model>.<field> = form.<field>.data~ ，很想用
+field 作为变量放在 form 和 data 之间，但是 Python 不像 Lisp 那样将代码
+和数据同等看待，Python 语法中不允许这样的形式，印象中这是被称作元编程
+的东西。
+
+下面这段代码是 WTForms 中表单处理部分，里面很多重复的东西，如果表单有更多的
+域，这段代码会更长
+
+#+BEGIN_SRC python
+  form = UserForm(request.form)
+  if form.validate_on_submit():
+      user = User()
+      user.username = form.username.data
+      user.email = form.email.data
+      user.gender = form.gender.data
+      user.telephone = form.telephone.data
+      user.address = form.address.data
+      user.password = form.password.data
+      user.save()
+#+END_SRC
+
+
+
+* 解决方案
+
+Google 一下 [[https://www.google.com/?q%3Dpython%20variable%20as%20attribute][python variable as attribute]] 找到 Stack Overflow 这个[[http://stackoverflow.com/questions/17056450/python-reference-an-object-attribute-by-variable-name][帖子]]
+里面提到 =getattr= ，这正是能解决这个问题的魔法。
+
+利用反射，借助 =getattr= 和 =setattr= 这两个内置函数，可以将上面代码重
+写成下面这样
+
+#+BEGIN_SRC python
+  form = UserForm(request.form)
+  if form.validate_on_submit():
+      fields = ['username', 'gender', 'email', 'telephone', 'address', 'password']
+      user = User()
+      for field in fields:
+          form_field = getattr(form, field)
+          setattr(user, field, form_field.data)
+      user.save()
+#+END_SRC
+
+当然这里还引入了 fields 这个列表。实际中遇到重复的代码，合理地利用
+Python 内置丰富的数据结构也可以大幅简化程序，很多时候重复的部分用几行
+循环就可以完成，简洁明了也不容易出错，而 Python 中很多数据结构都可以迭
+代。
+
+
+
+* 拓展
+
+[[http://en.wikipedia.org/wiki/Reflection_%2528computer_programming%2529][Wikipedia]] 中对反射给出的定义是：
+
+#+BEGIN_QUOTE
+In computer science, reflection is the abblity of a computer program
+to examine and modify the structure and behavior of the program at
+runtime.
+#+END_QUOTE
+
+与元编程([[http://en.wikipedia.org/wiki/Metaprogramming][Meta programming]])有相似的地方，都是动态感知(examine)或修改
+(modify)程序结构，不过反射强调是在运行时。
+
+自省([[http://en.wikipedia.org/wiki/Type_introspection][Introspection]])的概念也经常与反射一起出现，但自省仅仅是运行时感知
+(examine)对象的类型或属性，而不包括修改，因此反射是依赖于自省的，只有
+自省感知了程序结构才能反射维护修改程序结构。
+
+Python 中自省和反射常用到的函数有 [[https://docs.python.org/3.4/library/functions.html#dir][dir()]], [[https://docs.python.org/3.4/library/functions.html#type][type()]], [[https://docs.python.org/3.4/library/functions.html#isinstance][isinstance()]],
+[[https://docs.python.org/3.4/library/functions.html#issubclass][issubclass()]], [[https://docs.python.org/3.4/library/functions.html#getattr][getattr()]], [[https://docs.python.org/3.4/library/functions.html#hasattr][hasattr()]], [[https://docs.python.org/3.4/library/functions.html#setattr][setattr()]], [[https://docs.python.org/3.4/library/functions.html#delattr][delattr()]], [[https://docs.python.org/3.4/library/functions.html#exec][exec()]],
+[[https://docs.python.org/3.4/library/functions.html#eval][eval()]]

@@ -1,0 +1,239 @@
+#+TITLE: Python 虚拟开发环境--virtualenvwrapper
+#+DATE: <2015-04-18>
+#+KEYWORDS: python, virtualenv, pyvenv, virtualenvwrapper
+#+DESCRIPTION: 介绍 python 虚拟开发环境 virtualenvwrapper 的用法
+
+* Introduction
+
+python 这种动态语言生态系统比较庞大，各种第三方库非常丰富，开发过程不
+可避免会用到一些第三方库，开发不同项目时用到的库可能要求的版本不同，也
+可能没有权限在系统目录中安装库，或者与系统本身库版本相冲突。因而这类语
+言基本都提供虚拟环境，用来隔离开发环境。
+
+python 中有一个 [[https://virtualenv.pypa.io/en/latest/][virtualenv]] 包提供这样的功能，python3 中将这个包集成到
+标准库中了，并改名为 [[https://docs.python.org/3.4/using/scripts.html][pyvenv]] 使用起来都比较简单直接：
+#+BEGIN_EXAMPLE
+  pyvenv myvenv # or virtualenv myvenv
+  source myvenv/bin/activate
+  # install required packages for development
+  # develop in this shell
+  deactivate # exit current virtual environment
+#+END_EXAMPLE
+其中 =pyvenv myvenv= 会创建 _myvenv_ 目录，里面有 _bin_, _lib_,
+_include_ 等目录，通过 =source myvenv/bin/activate= 切换到虚拟环境后，
+用 pip 工具安装的包都会放到 _myvenv/lib/python3.x/site-packages_ 目录
+下。如果工作中使用的虚拟环境比较少，这种方式还不错，但当有好多个虚拟环
+境时，管理和维护这些环境就显得烦琐，而且可能会在不同目录下有 venv，看
+起来比较混乱。
+
+[[https://virtualenvwrapper.readthedocs.org/en/latest/index.html][virtualenvwrapper]] 正是解决上面问题的非常不错的工具，正如名字暗示那样，
+这仅仅是 virtualenv 的一个 wrapper，而且大部分代码是 shell，但提供非常
+方便操作。
+
+文档上列出的特性有：
+1. 将所有虚拟环境放在一个地方
+2. 对管理环境（创建、删除、拷贝）的包装
+3. 使用一个命令在不同环境之间切换
+4. Tab 补全虚拟环境
+5. 用户定制操作钩子([[Hooks][hook]])
+6. 插件系统提供可分享的扩展
+
+
+
+* Basic
+
+1. 安装
+   #+BEGIN_SRC sh
+     pip install virtualenvwrapper --user
+   #+END_SRC
+
+
+2. 设置环境变量
+   #+BEGIN_SRC sh
+     export WORKON_HOME=$HOME/.virtualenvs # 虚拟环境都会放在这个目录下
+     export PROJECT_HOME=$HOME/projects    # mkproject 创建的项目都会在这个目录下
+   #+END_SRC
+   为了以后 shell 都可以使用，应当将这两条加入 /.bashrc/ 或 /.zshrc/ 中
+
+
+3. 加载 virtualenvwrapper
+   #+BEGIN_SRC sh
+     source $HOME/.local/bin/virtualenvwrapper.sh
+   #+END_SRC
+   同样也将这句添加到 /.bashrc/ 或 /.zshrc/ 中
+
+
+4. 新建虚拟环境
+   #+BEGIN_SRC sh
+     mkvirtualenv myenv1             # 新建虚拟环境 myenv1
+   #+END_SRC
+   创建完会自动切换到新虚拟环境
+
+
+5. 为虚拟环境安装 packages
+   #+BEGIN_SRC sh
+     pip install flask flask-sqlalchemy ...
+   #+END_SRC
+
+
+6. 项目开发
+   #+BEGIN_SRC sh
+     # 创建新项目
+     mkproject myproject             # 会在 $PROJECT_HOME 下创建项目目录 myproject
+     # 或者切换到虚拟环境
+     workon myenv1                   # 任何目录下都可以执行这个命令，且支持自动补全
+   #+END_SRC
+
+
+
+* Commands
+
+由于本身是对 virtualenv 的包装，所以提供了很多方便的命令，这些命令在加
+载了 /virtualenvwrapper.sh/ 后在任何地方都是可用的：
+
++ mkvirtualenv myenv
+
+  与原始的 virtualenv 命令一样创建虚拟环境，除了 =-a, -i, -r, -h= 外所
+  有命令行参数都会直接传给原始的 =virtualenv= 命令。其中 =-a
+  project-dir= 可以将已有项目关联到新建的虚拟环境， =-i packages= 创建
+  虚拟环境后自动安装指定的 packages， =-r requirements.txt= 自动安装
+  /requirements.txt/ 中指定的 packages， =-h= 当然是帮助信息了。另外这
+  个命令也提供 hooks
+
+
++ workon myvenv
+
+  相比于 virtualenv 提供的简陋的 =source venv/bin/activate=, =workon= 命
+  令可以在任何地方使用，随时方便地切换到虚拟环境，同时还提供 [[Hooks][hooks]]，可
+  以在激活虚拟环境后自动执行一些命令，比如自动切换到项目目录
+
+
++ mktmpenv
+
+  有时想新建一个临时环境测试一下，用完就立即删掉，那么这条命令最合适了。
+  这条命令会在 *WORKON_HOME* 目录下创建一个临时虚拟环境，自动分配一个唯
+  一的名字，同时切换到这个虚拟环境及其目录，测试完后 =deactivate= 之后会
+  自动删除这个临时的虚拟环境
+
+
++ lsvirtualenv
++ showvirtualenv
++ cdvirtualenv
++ cpvirtualenv
++ rmvirtualenv
+
+  这几条命令所执行的命令如名字所描述的那样，其中 cpvirtualenv 可能会由
+  于虚拟环境中存在硬编码路径而出问题，所以不建议使用
+
+
++ allvirtualenv
+
+  在所有虚拟环境中执行命令，例如 =allvirtualenv pip install -U pip= 升
+  级所有虚拟环境的 pip
+
+
++ deactivate
+
+  这个命令就是 virtualenv 提供的，但添加了 [[Hooks][hooks]] 支持
+
+
++ lssitepackages
++ cdsitepackages
+
+  这两条命令正如名字所说，列出或进到当前虚拟环境的 _site-packages_ 目录
+
+
++ toggleglobalsitepackages
+
+  开关全局环境，这条非常实用，项目开发有时想临时使用系统安装的某个库，
+  而创建虚拟环境时又没有使用全局环境，可以用这个开关打开全局环境。如果
+  不想用了，再次使用这个命令也可以关掉
+
+
++ mkproject
+
+  创建项目： =mkproject myproject= 如果设置了 *PROJECT_HOME* 环境变量，这
+  条命令就会在 *PROJECT_HOME* 目录下创建项目目录 _myproject_ ，同时创建
+  虚拟环境 myproject，并设置当前虚拟环境为 myproject，自动切换到项目目
+  录 _$PROJECT_HOME/myproject_ 下。因为使用 virtualenv 通常也是这个流程，
+  所以 virtualevnwrapper 为我们包装了这样一个简单命令
+
+
++ cdproject
+
+  字面意思
+
+
++ setvirtualenvproject
+  
+  将已有项目与已有虚拟环境绑定： =setvirtualenvproject myvenv myproject=
+
+
++ add2virtualenv
+
+  将指定路径添加到当前虚拟环境的 Python 路径中，这样就不用每次进入
+  python shell 后手动添加路径了。一个应用场景是网上下载了一个 package，
+  但不想安装，例如把 django 源码克隆下来了， 通过 add2virtualenv
+  django 后，在 python shell 中直接就可以正常使用 django 包了： =from
+  django.http import request=
+
+
++ wipeenv
+
+  删除当前虚拟环境下所有的第三方库
+
+
++ virtualenvwrapper
+
+  列出上面所有命令和及其说明
+
+
+
+* Hooks
+
+hook 就是在某些特定条件下自动执行的脚本，有 global 和 local 两类 hooks，
+global hook 脚本放在 *$VIRTUALENVWRAPPER_HOOK_DIR* （默认与
+*$WORKON_HOME* 相同）下，local hook 脚本放在每个虚拟环境的 _bin_ 目录
+下。
+
++ initialize
+
+  每次加载 virtualenvwrapper.sh 后执行，用处不是很大
+
+
++ get_env_details
+  
+  为每个虚拟环境添加详细信息，使用 lsvirtualenv, showvirtualenv 命令时
+  会调用这个 hook。global 和 local 都可以使用，global 用于添加简单信息，
+  local 用于添加非常详细的说明。个人觉得这里只需要使用 local hook 就够
+  了，例如
+  #+BEGIN_SRC sh
+    #!/bin/sh
+    # file: $WORKON_HOME/env1/bin/get_env_details
+    echo "This virtualenv is for developing flask apps"
+  #+END_SRC
+
+
++ pre/post hooks
+
+  premkvirtualenv, preactivate, predeactivate, premkproject,
+  prermvirtualenv, postmkvirtualenv, postactivate, postdeactivate,
+  postmkproject, postrmvirtualenv
+
+  对应地在执行某个操作前或后执行 hook。最常用的就是切换到某个虚拟环境
+  后自动进入对应项目的目录，并设置相应环境变量，为此只需要在 local
+  postactivate hook 中添加
+  #+BEGIN_SRC sh
+    #!/bin/sh
+    # file: $WORKON_HOME=$HOME/env1/bin/postactivate
+    export APP_CONFIG_FILE=$PROJECT_HOME/myapp/config/development.py
+    cd $PROJECT_HOME/myapp
+  #+END_SRC
+
+
+
+* Extensions
+
+其实有了上面那些功能就已经非常方便了，工作效率会大大提高。如果仍然觉得
+不够，还可以使用扩展，比如使用项目模板。这些暂时用不到，这里就不记录了，
+等需要用时再查看[[https://virtualenvwrapper.readthedocs.org/en/latest/extensions.html][文档]]
