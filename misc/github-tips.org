@@ -1,6 +1,6 @@
 #+TITLE: GitHub 使用小技巧
 #+DATE: <2015-02-17>
-#+KEYWORDS: github,advanced-search, github-shortcuts, gist
+#+KEYWORDS: github 技巧, github tips, github 高级搜索, github advanced search, github 快捷键, github shortcuts
 
 
 GitHub 现在成了程序员最流行的社交网站，可能也是最大的代码托管仓库。然

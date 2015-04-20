@@ -1,6 +1,6 @@
 #+TITLE: Python 中的 exit
 #+DATE: <2014-12-31>
-#+KEYWORDS: python, exit function
+#+KEYWORDS: python 退出函数, python exit function
 
 python 中有 [[https://docs.python.org/3/library/constants.html#exit][exit()]], [[https://docs.python.org/3/library/constants.html#quit][quit()]], [[https://docs.python.org/3/library/sys.html#sys.exit][sys.exit()]], [[https://docs.python.org/3/library/os.html#os._exit][os._exit()]] 几个退出函数，还有
 [[https://docs.python.org/3/library/atexit.html][atexit]] 模块

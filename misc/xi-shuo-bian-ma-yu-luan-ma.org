@@ -1,16 +1,7 @@
 #+TITLE: 细说编码与乱码
 #+DATE: <2014-05-23>
+#+KEYWORDS: 中文乱码，中文编码，编辑器乱码，压缩文件名乱码，LaTeX 中文，换行符编码，python encode/decode error
 
-
-#+BEGIN_COMMENT
-.. title: 细说编码与乱码
-.. slug: xi-shuo-bian-ma-yu-luan-ma
-.. date: 2014/05/23 23:18:42
-.. tags: 
-.. link: 
-.. description: 
-.. type: text
-#+END_COMMENT
 
 写过 python2 程序和在多平台(Windows, Linux, Mac)工作的人应该被编码和乱
 码问题纠结过，尤其是从 Windows 转到 Linux 的新手，肯定会被折腾得蛋疼不

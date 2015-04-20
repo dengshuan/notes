@@ -1,6 +1,6 @@
 #+TITLE: 关于 ssh 的一些 Tips
 #+DATE: <2014-11-15>
-#+KEYWORDS: ssh, ssh tunnel, github multi-user
+#+KEYWORDS: ssh 小技巧, ssh tips, ssh 攻击, ssh attack, ssh 隧道代理, ssh tunnel proxy, github 多帐户, github multi-user
 
 SSH（Secure SHell）是用来安全的进行远程连接的协议，最常用的是 openssh
 实现，这是开发号称最安全系统 OpenBSD 那帮人做的，安全性有足够的保障。

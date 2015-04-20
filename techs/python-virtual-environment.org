@@ -1,6 +1,6 @@
 #+TITLE: Python 虚拟开发环境--virtualenvwrapper
 #+DATE: <2015-04-18>
-#+KEYWORDS: python, virtualenv, pyvenv, virtualenvwrapper
+#+KEYWORDS: python 虚拟环境, python virtual environment, python virtualenv, pyvenv, python 开发环境管理, virtualenvwrapper
 #+DESCRIPTION: 介绍 python 虚拟开发环境 virtualenvwrapper 的用法
 
 * Introduction

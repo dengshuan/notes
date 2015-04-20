@@ -1,6 +1,6 @@
 #+TITLE: Python 函数式编程
 #+DATE: <2015-01-05>
-#+KEYWORDS: python functional-programming, iterator, generator, next, iter, yield
+#+KEYWORDS: python 函数式编程, python functional programming, python 迭代器、生成器, python iterator/generator, python next, python iter, python yield
 
 python 标准库中提供了 [[https://docs.python.org/3/library/itertools.html][itertools]], [[https://docs.python.org/3/library/functools.html][functools]], [[https://docs.python.org/3/library/operator.html][operator]] 三个库支持函数式
 编程，对高阶函数的支持，python 提供 [[python-decorator.org][decorator 语法糖]]。 迭代器

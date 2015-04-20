@@ -1,6 +1,6 @@
 #+TITLE: Emacs 24.4 发布了
 #+DATE: <2014-10-23>
-#+TAGS: emacs
+#+KEYWORDS: emacs 24.4 release, emacs 24.4 发布, emacs 24.4 新特性, emacs 24.4 features
 
 Archlinux 现在已经可以直接升级到这个版本了，其它发行版应该陆续会跟进，
 等不及想尝试新版本的可以直接下载 [[http://ftpmirror.gnu.org/emacs/emacs-24.4.tar.gz][Emacs 24.4]] 编译
