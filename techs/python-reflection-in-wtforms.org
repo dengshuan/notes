@@ -1,7 +1,6 @@
 #+TITLE: Python 反射在 WTForms 中的应用
 #+DATE: <2015-04-16>
 #+KEYWORDS: python 反射, python reflection, python 自省, python introspection, python 反射与自省实际应用, DRY(Don't Repeat Yourself)
-#+DESCRIPTION: 反射的实际开发中的应用，DRY(Don't Repeat Yourself)：利用 Python 的反射去掉重复代码
 
 Python 的反射相对来说是比较高级的功能，网上介绍反射的文章很多，但这种
 强大的工具在实际运用中有什么用途一般都没有提到，基本都只是就这个知识来
