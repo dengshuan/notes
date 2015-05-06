@@ -1,0 +1,171 @@
+#+TITLE: python 重载
+#+DATE: <2015-03-23>
+#+KEYWORDS: python overloading, python 函数重载, python 方法重载, python 操作符重载, overload, override
+
+
+重载是不同的函数或方法使用相同的名字，对于维护程序的简洁性非常有用，也
+是 OOP 中实现多态所必需的。
+
+* 函数重载
+
+函数重载是给相同功能，但参数不同的函数起相同的名字，这样就可以减轻程序
+员给函数起名字、记名字的负担，一般发生在编译时，由编译器根据传给调用函
+数的参数判断具体调用的是哪个函数。
+
+C 语言中缺乏重载、泛型这些现代语言的特性，为了实现一个能打印整型数组、
+字符串的函数，不得不实现 ~printIntArray(int* arr), printString(char*
+arr), printStringRange(char* arr, int beg, int end)~ 等等这样一堆不同
+名字的函数。利用 C++/Java 等高级语言的函数重载功能就可以给这些函数统一
+命名为 print，针对不同的参数定义不同的实现。
+
+Python 中函数重载与 C++/Java 中不太一样，不需要将每个重载函数分开定义，
+而是在一个函数中通过默认参数定义的，例如打印一个列表
+
+#+BEGIN_SRC python
+  def printList(lst, reverse=False):
+      if reverse:
+          for ele in reversed(lst):
+              print(ele)
+      else:
+          for ele in lst:
+              print(ele)
+#+END_SRC
+
+如果像 C++/Java 那样多次定义同名函数，Python 会用后面的定义直接覆盖前
+面的，而不是重载。
+
+
+* 方法重载
+
+面向对象语言中都会有方法重载，即允许覆盖父类方法，方法重载是为了实现运
+行时多态。
+
+在 Java 中这被称为 override，一般在方法前加上 @Override 注解，并且要求
+与父类有相同的参数签名、返回类型，即除了实现不同外其它所有都相同，Java
+的方法重载发生在运行时。
+
+而 Python 则直接在子类中定义同名函数即可，并且对参数和返回类型都没有任
+何约束。
+
+不过 python 中还有一类特殊的方法，以双下划线开头和结束的方法名，这类方
+法重载特别有用，因为它可以让用户使用 python 内置的函数或操作符，例如
+abs, int, sum, list, dict 等内置函数，加减乘除、中括号等操作符。
+
+假设想通过 abs 函数对列表取绝对值
+
+#+BEGIN_SRC python
+  class MyList(object):
+      def __init__(self, lst):
+          self.lst = lst
+      def __abs__(self):
+          return [abs(ele) for ele in self.lst]
+
+  lst = [-3.2, 6.1, 0, -5.9]
+  mylist = MyList(lst)
+  print(abs(mylist))
+#+END_SRC
+
+通过重载这类特殊方法，可以让自定义的数据类型使用任何 python 语言的组件。
+下面是一些常见算符或结构及其所对应的重载方法，[[http://www.rafekettler.com/magicmethods.html][Rafe Kettler]]博客中给出了
+更多更全面的重载方法。
+
++ +=: __iadd__()
++ []: __getitem__(), __delitem__(), __setitem__()
++ for: __iter__()
++ del: __del__()
++ in: __contains__()
++ len: __len__()
++ with: __enter__(), __exit__()
+
+下面这段代码[fn:1]实现了 Haskell 中的列表所具有的功能，如 init, head,
+tail, last, drop 等
+
+#+BEGIN_SRC python
+  class FunctionalList:
+      '''一个列表的封装类，实现了一些额外的函数式
+      方法，例如head, tail, init, last, drop和take。'''
+
+      def __init__(self, values=None):
+          if values is None:
+              self.values = []
+          else:
+              self.values = values
+
+      def __len__(self):
+          return len(self.values)
+
+      def __getitem__(self, key):
+          # 如果键的类型或值不合法，列表会返回异常
+          return self.values[key]
+
+      def __setitem__(self, key, value):
+          self.values[key] = value
+
+      def __delitem__(self, key):
+          del self.values[key]
+
+      def __iter__(self):
+          return iter(self.values)
+
+      def __reversed__(self):
+          return reversed(self.values)
+
+      def append(self, value):
+          self.values.append(value)
+
+      def head(self):
+          # 取得第一个元素
+          return self.values[0]
+
+      def tail(self):
+          # 取得除第一个元素外的所有元素
+          return self.valuse[1:]
+
+      def init(self):
+          # 取得除最后一个元素外的所有元素
+          return self.values[:-1]
+
+      def last(self):
+          # 取得最后一个元素
+          return self.values[-1]
+
+      def drop(self, n):
+          # 取得除前n个元素外的所有元素
+          return self.values[n:]
+
+      def take(self, n):
+          # 取得前n个元素
+          return self.values[:n]
+#+END_SRC
+
+最常用的 __repr__(), __str__() 两者很相近，容易混淆。区别可以通过下面
+例子清晰地看出。python2 中还有 __unicode__() 方法，功能与 python3 中的
+__str__() 相同
+
+#+BEGIN_SRC python
+  class C:
+      def __init__(self, val):
+          self.val = val
+      def __repr__(self):
+          return "Calling repr: %s" % self.val
+      def __str__(self):
+          return "Calling str: %s" % self.val
+
+  c = C(4)
+  repr(c)                         # => 'Calling repr: 4'
+  str(c)                          # => 'Calling str: 4'
+  c                               # => Calling repr: 4
+  print(c)                        # => Calling str: 4
+#+END_SRC
+
+这两个函数在交互式开发中很有用，例如使用 ORM 创建模型时一般需要重载这
+两个方法，如果没有定义这两个函数，在 python shell 中查看某个模型实例时，
+默认显示其在内存中的地址，对于开发调试没有任何帮助。另外 Django admin
+页面中显示的模型数据也是调用 str() 得到的字符串，所以为了让网站管理员
+能够从 admin 页面中得到更有用的信息而不是一个毫无意义的内存地址，一定
+要重载 __str__() 方法（或 python2 中的 __unicode__()）
+
+
+* Footnotes
+
+[fn:1] [[http://www.rafekettler.com/magicmethods.html][A Guide to Python's Magic Methods]]  [[http://pyzh.readthedocs.org/en/latest/python-magic-methods-guide.html][（译）Python 魔法方法指南]]

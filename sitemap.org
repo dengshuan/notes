@@ -3,6 +3,8 @@
    + techs
      + 2015-04-18 [[file:techs/python-virtual-environment.org][Python 虚拟开发环境--virtualenvwrapper]]
      + 2015-04-16 [[file:techs/python-reflection-in-wtforms.org][Python 反射在 WTForms 中的应用]]
+     + 2015-03-23 [[file:techs/python-overloading.org][python 重载]]
+     + 2015-02-28 [[file:techs/python-mixins.org][Python Mixins 机制]]
      + 2015-01-05 [[file:techs/python-functional.org][Python 函数式编程]]
      + 2014-12-31 [[file:techs/python-exit.org][Python 中的 exit]]
      + 2014-11-15 [[file:techs/ssh-tips.org][关于 ssh 的一些 Tips]]

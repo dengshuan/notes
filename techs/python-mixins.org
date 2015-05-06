@@ -1,0 +1,200 @@
+#+TITLE: Python Mixins 机制
+#+DATE: <2015-02-28>
+#+KEYWORDS: python mixins, python 混入, multiple inheritance, 多重继承
+
+
+大多数面向对象语言都不支持多重继承，因为这会导致著名的 [[https://en.wikipedia.org/wiki/Diamond_problem][Diamond problem]]，
+而 Python 虽然形式上支持多重继承，但其实现机制却是利用 mixin，从而有效
+地避免了 Diamond problem。
+
+
+* 什么是 mixin
+
+[[http://en.wikipedia.org/wiki/Mixin][Mixin]] 本意是混入，程序中用来将不同功能(functionality)组合起来，从而为
+类提供多种特性。而虽然继承(inheritance)也可以实现多种功能，但继承一般
+有从属关系，即子类通常是父类更加具体的类。而 mixin 则更多的是功能上的
+组合，因而相当于是接口（带实现的接口）。
+
+好比是联想电脑与电脑之间是继承关系，因而联想电脑具备电脑的各种功能；而
+联想电脑与键盘之间则是 mixin 关系，同样也具备键盘的各种功能。
+
+一般编程语言都不允许多重继承，主要是为了避免 diamond problem，即两个父
+类如果有共同的祖父类，但对祖父类相同部分做了不同的修改，则这个类再继承
+两个父类就会产生冲突。
+
+[[../images/Diamond_problem.png]]
+
+类似于 git 版本控制中，如果两个人对同一段代码做了不同的修改，则合并时
+就需要手动解决冲突。编程语言如果碰到 diamond problem 时依赖程序员决定
+用哪个父类的特性，就会变得非常复杂而且容易产生歧义。
+
+从上面分析可以看出其实单从功能上来说，完全可以用 mixin 取代继承，从而
+可以不要类这个概念。最近几年新出的编程语言 [[http://www.rust-lang.org][Rust]] 和 [[http://golang.org][Go]] 里面就没有类
+(class)以及继承，但并不影响代码复用，它们也正是利用 mixin 这种机制实现
+的代码复用，例如 Rust 中用特征(Trait)取代了类和接口。
+
+两种观点其实是两种不同的世界观，目前类与继承的概念则更为流行，而且符合
+人们对事物的认知：人们对白猫、黑猫、花猫观察后更容易抽象出猫的概念，而
+不是将这些事物作为无规律的组合去看待。
+
+
+* Python 中的 mixin
+
+理解了 mixin 概念之后，再将其运用到 Python 中，理解（形式上）多重继承
+就会容易许多。python 对于 mixin 命名方式一般以 MixIn, able, ible 为后缀
+
+由于 mixin 是组合，因而是做加法，为已有的类添加新功能，而不像继承一样
+下一级会覆盖上一级相同的属性或方法，但在某些方面仍然表现得与继承一样，
+例如类的实例也是每个 mixin 的实例。mixin 使用不当会导致类的命名空间污
+染，所以要尽量避免 mixin 中定义相同方法，对于相同的方法，有时很难区分
+实例到底使用的是哪个方法。
+
+#+BEGIN_SRC python
+  class Mixin1(object):
+      def test(self):
+          print("mixin 1")
+      def which_test(self):
+          self.test()
+
+  class Mixin2(object):
+      def test(self):
+          print("mixin 2")
+
+  class MyClass1(Mixin1, Mixin2):
+      pass                        # 按从左到右顺序从 mixin 中获取功能并添加到 MyClass
+
+  class Myclass2(Mixin1, Mixin2):
+      def test(self):             # 已有 test 方法，因而不会再添加 Mixin1, Mixin2 的 test 方法
+          print("my class 2")
+
+  c1 = MyClass1()
+  c1.test()                       # => "mixin 1"
+  c2 = MyClass2()
+  c2.test()                       # => "my class 2"
+  c2.which_test()                 # => "my class 2"
+  isinstance(c1, Mixin1)          # => True
+  issubclass(MyClass1, Mixin2)    # => True
+#+END_SRC
+
+Mixin 强调的是功能而不像继承那样包括所有功能和数据域，但利用 mixin 同
+样也可以实现代码复用，下面这段代码来自[[http://stackoverflow.com/questions/533631/what-is-a-mixin-and-why-are-they-useful][Stack Overflow]]，当然
+functools.total_ordering() 装饰器已经提供相同功能了，这里仅用来说明
+mixin 实现代码复用。
+
+#+BEGIN_SRC python
+  class Comparable(object):
+      def __ne__(self, other):
+          return not (self == other)
+
+      def __lt__(self, other):
+          return self <= other and (self != other)
+
+      def __gt__(self, other):
+          return not self <= other
+
+      def __ge__(self, other):
+          return self == other or self > other
+
+
+  class Integer(Comparable):
+      def __init__(self, i):
+          self.i = i
+
+
+  class Char(Comparable):
+      def __init__(self, c):
+          self.c = c
+#+END_SRC
+
+下面是 Python2 中动态加入 mixin 的方法[fn:1]，python3 中已经不支持这种
+方法了，python3 可能需要借助 type 等元编程工具实现[fn:2]动态 mixin
+
+#+BEGIN_SRC python
+  def MixIn(pyClass, mixInClass, makeLast=0):
+      if mixInClass not in pyClass.__bases__:
+          if makeLast:
+              pyClass.__bases__ += (mixInClass,)
+          else:
+              pyClass.__bases__ = (mixInClass,) + pyClass.__bases
+#+END_SRC
+
+不过尽管动态 mixin 是可能的，但实际使用中要尽量避免这样做，因为可能会
+使所有使用这个 mixin 的实例出现一些不可预知的问题。
+
+
+* Python mixin v.s. Ruby mixin
+
+[[http://www.mattjmorrison.com/2011/11/22/python-mixins.html][Matthew J. Morrison]] 提到的例子表明 Python 的 mixin 并不是纯粹意义上的
+mixin，还是带有继承的特点。
+
+#+BEGIN_SRC python
+  from datetime import datetime, date
+  import json
+
+  class Jsonable(object):
+
+      def date_handler(self, obj):
+          if isinstance(obj, (datetime, date)):
+              return obj.isoformat()
+
+      def save_json(self, file_name):
+          with open(file_name, 'w') as output:
+              output.write(json.dumps(self.__dict__, default=self.date_handler))
+
+  class Person(Jsonable):
+
+      def __init__(self, name, bday):
+          self.name = name
+          self.bday = bday
+
+
+  if __name__ == '__main__':
+      matt = Person('matt', date(1983, 07, 12))
+      matt.save_json("matt.json")
+      assert issubclass(Person, Jsonable)
+      assert isinstance(matt, Person)
+      assert isinstance(matt, Jsonable)
+#+END_SRC
+
+而 Ruby 的 Mixin 则不带有继承的概念，直接使用 include 引入 mixin。从语
+义上讲，的确用 include 描述比 inherit 更准确。
+
+#+BEGIN_SRC ruby
+  require "json"
+
+  module Jsonable
+    def jsonify
+      json_data = {}
+      self.instance_variables.each do |v|
+        json_data[v.to_s[1..-1]] = self.instance_variable_get(v)
+      end
+      return json_data.to_json
+    end
+
+    def save_json(file_name)
+      File.open(file_name, 'w') {|f| f.write(self.jsonify) }
+    end
+
+  end
+
+  class Person
+    include Jsonable
+    def initialize(name, bday)
+      @name = name
+      @bday = bday
+    end
+  end
+
+  person = Person.new('name', '07/12/1983')
+  person.save_json('ruby.json')
+  raise "not instance" unless person.instance_of? Person
+  raise "is instance" if person.instance_of? Jsonable
+  raise "subclass" if Person.is_a? Jsonable
+#+END_SRC
+
+
+* Footnotes
+
+[fn:1] [[http://www.linuxjournal.com/node/4540/print][Using Mix-ins with Python]]
+
+[fn:2] [[http://hyperthese.net/post/python-run-time-mixins/][Python run-time mixins]]
